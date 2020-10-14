@@ -6,6 +6,7 @@
 
 # include "polygon_triangulate.h"
 # include "fmt_utils.h"
+# include "mylog.h"
 
 #define THE_MIN(a, b) ((a) < (b) ? (a) : (b))
 #define THE_MAX(a, b) ((a) > (b) ? (a) : (b))
@@ -24,17 +25,13 @@
     P2--------->P3
 
   Modified:
-
     28 August 2016
 
   Author:
-
     John Burkardt
 
   Parameters:
-
-    Input, double X1, Y1, X2, Y2, X3, Y3, the coordinates of the points
-    P1, P2, P3.
+    Input, double X1, Y1, X2, Y2, X3, Y3, the coordinates of the points P1, P2, P3.
 
     Output, double ANGLE_DEGREE, the angle swept out by the rays, measured
     in degrees.  0 <= VALUE < 360.  If either ray has zero length,
@@ -72,27 +69,22 @@ double angle_degree ( double x1, double y1, double x2, double y2, double x3, dou
 
 /**
   Purpose:
-
     BETWEEN is TRUE if vertex C is between vertices A and B.
 
   Discussion:
-
     The points must be (numerically) collinear.
 
     Given that condition, we take the greater of XA - XB and YA - YB
     as a "scale" and check where C's value lies.
 
   Modified:
-
     05 May 2014
 
   Author:
-
     Original C version by Joseph ORourke.
     This C version by John Burkardt.
 
   Reference:
-
     Joseph ORourke,
     Computational Geometry in C,
     Cambridge, 1998,
@@ -100,7 +92,6 @@ double angle_degree ( double x1, double y1, double x2, double y2, double x3, dou
     LC: QA448.D38.
 
   Parameters:
-
     Input, double XA, YA, XB, YB, XC, YC, the coordinates of 
     the vertices.
 
@@ -137,11 +128,9 @@ int between ( double xa, double ya, double xb, double yb, double xc, double yc )
 
 /**
   Purpose:
-
     COLLINEAR returns a measure of collinearity for three points.
 
   Discussion:
-
     In order to deal with collinear points whose coordinates are not
     numerically exact, we compare the area of the largest square
     that can be created by the line segment between two of the points
@@ -152,16 +141,13 @@ int between ( double xa, double ya, double xb, double yb, double xc, double yc )
     will be small relative to the square of the longest segment.
 
   Modified:
-
     10 September 2016
 
   Author:
-
     Original C version by Joseph ORourke.
     This C version by John Burkardt.
 
   Reference:
-
     Joseph ORourke,
     Computational Geometry in C,
     Cambridge, 1998,
@@ -169,7 +155,6 @@ int between ( double xa, double ya, double xb, double yb, double xc, double yc )
     LC: QA448.D38.
 
   Parameters:
-
     Input, double XA, YA, XB, YB, XC, YC, the coordinates of 
     the vertices.
 
@@ -212,20 +197,16 @@ int collinear ( double xa, double ya, double xb, double yb, double xc, double yc
 
 /**
   Purpose:
-
     DIAGONAL: VERTEX(IM1) to VERTEX(IP1) is a proper internal diagonal.
 
   Modified:
-
     05 May 2014
 
   Author:
-
     Original C version by Joseph ORourke.
     This C version by John Burkardt.
 
   Reference:
-
     Joseph ORourke,
     Computational Geometry in C,
     Cambridge, 1998,
@@ -235,13 +216,9 @@ int collinear ( double xa, double ya, double xb, double yb, double xc, double yc
   Parameters:
 
     Input, int IM1, IP1, the indices of two vertices.
-
     Input, int N, the number of vertices.
-
     Input, int PREV_NODE[N], the previous neighbor of each vertex.
-
     Input, int NEXT_NODE[N], the next neighbor of each vertex.
-
     Input, double X[N], Y[N], the coordinates of each vertex.
 
     Output, int DIAGONAL, the value of the test.
@@ -264,20 +241,16 @@ int diagonal ( int im1, int ip1, int n, int prev_node[], int next_node[], double
 
 /**
   Purpose:
-
     DIAGONALIE is true if VERTEX(IM1):VERTEX(IP1) is a proper diagonal.
 
   Modified:
-
     05 May 2014
 
   Author:
-
     Original C version by Joseph ORourke.
     This C version by John Burkardt.
 
   Reference:
-
     Joseph ORourke,
     Computational Geometry in C,
     Cambridge, 1998,
@@ -345,21 +318,17 @@ int diagonalie ( int im1, int ip1, int n, int next_node[], double x[], double y[
 
 /**
   Purpose:
-
     IN_CONE is TRUE if the diagonal VERTEX(IM1):VERTEX(IP1) is strictly internal.
 
 
   Modified:
-
     05 May 2014
 
   Author:
-
     Original C version by Joseph ORourke.
     This C version by John Burkardt.
 
   Reference:
-
     Joseph ORourke,
     Computational Geometry in C,
     Cambridge, 1998,
@@ -367,15 +336,10 @@ int diagonalie ( int im1, int ip1, int n, int next_node[], double x[], double y[
     LC: QA448.D38.
 
   Parameters:
-
     Input, int IM1, IP1, the indices of two vertices.
-
     Input, int N, the number of vertices.
-
     Input, int PREV_NODE[N], the previous neighbor of each vertex.
-
     Input, int NEXT_NODE[N], the next neighbor of each vertex.
-
     Input, double X[N], Y[N], the coordinates of each vertex.
 
     Output, int IN_CONE, the value of the test.
@@ -413,25 +377,20 @@ int in_cone ( int im1, int ip1, int n, int prev_node[], int next_node[], double 
 
 /**
   Purpose:
-
     INTERSECT is true if lines VA:VB and VC:VD intersect.
 
   Discussion:
-
     Thanks to Gene Dial for correcting the call to intersect_prop, 
     08 September 2016.
  
   Modified:
-
     08 September 2016
 
   Author:
-
     Original C version by Joseph ORourke.
     This C version by John Burkardt.
 
   Reference:
-
     Joseph ORourke,
     Computational Geometry in C,
     Cambridge, 1998,
@@ -439,7 +398,6 @@ int in_cone ( int im1, int ip1, int n, int prev_node[], int next_node[], double 
     LC: QA448.D38.
 
   Parameters:
-
     Input, double XA, YA, XB, YB, XC, YC, XD, YD, the X and Y 
     coordinates of the four vertices.
 
@@ -478,25 +436,19 @@ int intersect ( double xa, double ya, double xb, double yb, double xc, double yc
 
 /**
   Purpose:
-
     L4_XOR returns the exclusive OR of two L4's.
 
   Discussion:
-
     An L4 is a logical value.
 
   Modified:
-
     04 May 2014
 
   Author:
-
    John Burkardt
 
   Parameters:
-
     Input, int L1, L2, two values whose exclusive OR is needed.
-
     Output, int L4_XOR, the exclusive OR of L1 and L2.
 */
 int l4_xor ( int l1, int l2 )
@@ -515,24 +467,19 @@ int l4_xor ( int l1, int l2 )
 
 /**
   Purpose:
-
     INTERSECT_PROP is TRUE if lines VA:VB and VC:VD have a proper intersection.
 
   Licensing:
-
     This code is distributed under the GNU LGPL license.
 
   Modified:
-
     04 May 2014
 
   Author:
-
     Original C version by Joseph ORourke.
     This C version by John Burkardt.
 
   Reference:
-
     Joseph ORourke,
     Computational Geometry in C,
     Cambridge, 1998,
@@ -540,10 +487,7 @@ int l4_xor ( int l1, int l2 )
     LC: QA448.D38.
 
   Parameters:
-
-    Input, double XA, YA, XB, YB, XC, YC, XD, YD, the X and Y 
-    coordinates of the four vertices.
-
+    Input, double XA, YA, XB, YB, XC, YC, XD, YD, the X and Y coordinates of the four vertices.
     Output, int INTERSECT_PROP, the result of the test.
 */
 int intersect_prop ( double xa, double ya, double xb, double yb, double xc, double yc, double xd, double yd )
@@ -593,28 +537,21 @@ int intersect_prop ( double xa, double ya, double xb, double yb, double xc, doub
 
 /**
   Purpose:
-
     POLYGON_AREA returns the area of a polygon.
 
   Discussion:
-
     The vertices should be listed in counter-clockwise order so that
     the area will be positive.
 
   Modified:
-
     10 September 2016
 
   Author:
-
     John Burkardt.
 
   Parameters:
-
     Input, int N, the number of vertices.
-
     Input, double X[N], Y[N], the vertex coordinates.
-
     Output, double POLYGON_AREA, the area of the polygon.
 */
 double polygon_area ( int n, double x[], double y[] )
@@ -637,11 +574,9 @@ double polygon_area ( int n, double x[], double y[] )
 
 /**
   Purpose:
-
     POLYGON_TRIANGULATE determines a triangulation of a polygon.
 
   Discussion:
-
     There are N-3 triangles in the triangulation.
 
     For the first N-2 triangles, the first edge listed is always an
@@ -654,16 +589,13 @@ double polygon_area ( int n, double x[], double y[] )
     5.7E-05 degrees, 26 June 2018.
 
   Modified:
-
     26 June 2018
 
   Author:
-
     Original C version by Joseph ORourke.
     This C version by John Burkardt.
 
   Reference:
-
     Joseph ORourke,
     Computational Geometry in C,
     Cambridge, 1998,
@@ -671,13 +603,10 @@ double polygon_area ( int n, double x[], double y[] )
     LC: QA448.D38.
 
   Parameters:
-
     Input, int N, the number of vertices.
-
     Input, double X[N], Y[N], the coordinates of each vertex.
 
-    Output, int TRIANGLES[3*(N-2)], the triangles of the 
-    triangulation.
+    Output, int TRIANGLES[3*(N-2)], the triangles of the triangulation.
 */
 int *polygon_triangulate ( int n, double x[], double y[] )
 {
@@ -685,82 +614,59 @@ int *polygon_triangulate ( int n, double x[], double y[] )
   const double angle_tol = 5.7E-05;
   double area;
   int *ear;
-  int i;
   int i0;
   int i1;
   int i2;
   int i3;
   int i4;
   int *next_node;
-  int node;
-  int node1;
-  int node2;
   int node3;
-  int node_m1;
   int *prev_node;
   int triangle_num;
   int *triangles;
 /*
   We must have at least 3 vertices.
 */
-  if ( n < 3 )
-  {
-    fprintf ( stderr, "\n" );
-    fprintf ( stderr, "POLYGON_TRIANGULATE - Fatal error!\n" );
-    fprintf ( stderr, "  N < 3.\n" );
-    exit ( 1 );
+  if ( n < 3 ) {
+    ERR("POLYGON_TRIANGULATE - Fatal error!  N < 3." );
+    return NULL;
   }
 /*
   Consecutive vertices cannot be equal.
 */
-  node_m1 = n - 1;
-  for ( node = 0; node < n; node++ )
-  {
-    if ( x[node_m1] == x[node] && y[node_m1] == y[node] )
-    {
-      fprintf ( stderr, "\n" );
-      fprintf ( stderr, "POLYGON_TRIANGULATE - Fatal error!\n" );
-      fprintf ( stderr, "  Two consecutive nodes are identical.\n" );
-      exit ( 1 );
+  for (int node = 0, prev = n-1; node < n; node++ ) {
+    if ( x[prev] == x[node] && y[prev] == y[node] ) {
+      ERR("POLYGON_TRIANGULATE - Fatal error!  Two consecutive nodes are identical." );
+      return NULL;
     }
-    node_m1 = node;
+    prev = node;
   }
 /*
   No node can be the vertex of an angle less than 1 degree 
   in absolute value.
 */
-  node1 = n - 1;
-
-  for ( node2 = 0; node2 < n; node2++ )
-  {
+  for (int node2 = 0, prev = n-1; node2 < n; node2++ ) {
     node3 = ( ( node2 + 1 ) % n ); 
 
     angle = angle_degree ( 
-      x[node1], y[node1], 
+      x[prev], y[prev], 
       x[node2], y[node2], 
       x[node3], y[node3] );
 
     if ( fabs ( angle ) <= angle_tol )
     {
-      fprintf ( stderr, "\n" );
-      fprintf ( stderr, "POLYGON_TRIANGULATE - Fatal error!\n" );
-      fprintf ( stderr, "  Polygon has an angle smaller than %g\n", angle_tol );
-      fprintf ( stderr, "  occurring at node %d\n", node2 );
-      exit ( 1 );
+      ERR("POLYGON_TRIANGULATE - Fatal error!  Polygon has an angle smaller than %g,  accurring at node %d", angle_tol, node2);
+      return NULL;
     }
-    node1 = node2;
+    prev = node2;
   }
 /*
   Area must be positive.
 */
   area = polygon_area ( n, x, y );
-
-  if ( area <= 0.0 )
-  {
-    fprintf ( stderr, "\n" );
-    fprintf ( stderr, "POLYGON_TRIANGULATE - Fatal error!\n" );
-    fprintf ( stderr, "  Polygon has zero or negative area.\n" );
-    exit ( 1 );
+  if ( area <= 0.0 ) {
+    ERR("POLYGON_TRIANGULATE - Fatal error!  Polygon has zero or negative area." );
+    return NULL;
   }
 
   triangles = ( int * ) malloc ( 3 * ( n - 2 ) * sizeof ( int ) );
@@ -770,7 +676,7 @@ int *polygon_triangulate ( int n, double x[], double y[] )
   prev_node = ( int * ) malloc ( n * sizeof ( int ) );
   next_node = ( int * ) malloc ( n * sizeof ( int ) );
 
-  i = 0;
+  int i = 0;
   prev_node[i] = n - 1;
   next_node[i] = i + 1;
 
@@ -790,8 +696,7 @@ int *polygon_triangulate ( int n, double x[], double y[] )
   ear = ( int * ) malloc ( n * sizeof ( int ) );
   for ( i = 0; i < n; i++ )
   {
-    ear[i] = diagonal ( prev_node[i], next_node[i], n, prev_node, 
-      next_node, x, y );
+    ear[i] = diagonal ( prev_node[i], next_node[i], n, prev_node, next_node, x, y );
   }
 
   triangle_num = 0;
@@ -843,9 +748,7 @@ int *polygon_triangulate ( int n, double x[], double y[] )
   triangles[1+triangle_num*3] = i1;
   triangles[2+triangle_num*3] = i2;
   triangle_num = triangle_num + 1;
-/*
-  Free memory.
-*/
+
   free ( ear );
   free ( next_node );
   free ( prev_node );

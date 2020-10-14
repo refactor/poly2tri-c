@@ -1,5 +1,6 @@
 .PHONY: clean test
 
+CFLAGS += -std=c11
 #CFLAGS += -Wall -Werror -Wextra -pedantic
 LDFLAGS += -lm
 

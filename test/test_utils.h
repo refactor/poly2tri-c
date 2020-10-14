@@ -3,9 +3,11 @@
 #include <stdlib.h>
 #include <stdio.h>
 
+#include "fmt_polygon_triangulate.h"
+
 #include "greatest.h"
 
-#define IDX_MIN(a, b) ((a) <= (b) ? (a) : (b))
+#define IDX_MIN(a, b) ((a) < (b) ? (a) : (b))
 
 #define ARR_LEN(arr) (sizeof(arr)/sizeof(arr[0]))
 

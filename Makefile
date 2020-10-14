@@ -1,3 +1,5 @@
+.PHONY: clean test
+
 #CFLAGS += -Wall -Werror -Wextra -pedantic
 LDFLAGS += -lm
 
@@ -5,12 +7,15 @@ CC = gcc
 
 HEADER_PATH = -I${PWD}/include -I/usr/include
 
-LINKED_OBJECTS = src/polygon_triangulate.o
+SRC = $(wildcard src/*.c)
+OBJS = $(SRC:%.c=%.o)
+TEST_HEADERS = $(wildcard test/*_gtest.h)
+DATA_HEADERS = $(wildcard test/*_data.h)
 
-test: gtest_one.run
-	./gtest_one.run
+test: all_gtest.run
+	./all_gtest.run
 
-%.run: test/%.c ${LINKED_OBJECTS}
+%_gtest.run: test/%_gtest.c ${TEST_HEADERS} ${DATA_HEADERS} ${OBJS}
 	$(CC) ${HEADER_PATH} ${CFLAGS} -g -o $@ $^ ${LDFLAGS}
 
 src/polygon_triangulate.o: src/polygon_triangulate.c include/polygon_triangulate.h

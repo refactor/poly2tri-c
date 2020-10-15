@@ -10,9 +10,9 @@ TEST comb_test(void) {
     ASSERT_EQ(ARR_LEN(x), ARR_LEN(y));
 
     const int n = ARR_LEN(x);
-    int* triangles = polygon_triangulate(n, x, y);
+    vidx_t* triangles = polygon_triangulate(n, x, y);
     const int tri_num = n - 2;
-    i4mat_transpose_print(3, tri_num, triangles, "Gotcha Comb Triangles");
+//    i4mat_transpose_print(3, tri_num, (int*)triangles, "Gotcha Comb Triangles");
 
     boxed_triangle* etris = (boxed_triangle*)expected_triangles;
     sort_triangles(tri_num, etris);

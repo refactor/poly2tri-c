@@ -1,3 +1,7 @@
+#ifndef __APPLE__
+#define _GNU_SOURCE
+#endif
+
 #include "greatest.h"
 
 #include "simple_gtest.h"

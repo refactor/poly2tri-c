@@ -1330,44 +1330,7 @@ void timestamp ( )
 }
 /******************************************************************************/
 
-double triangle_area ( double xa, double ya, double xb, double yb, double xc, 
-  double yc )
 
-/******************************************************************************/
-/*
-  Purpose:
-
-    TRIANGLE_AREA computes the signed area of a triangle.
-
-  Licensing:
-
-    This code is distributed under the GNU LGPL license.
-
-  Modified:
-
-    05 May 2014
-
-  Author:
-
-    John Burkardt
-
-  Parameters:
-
-    Input, double XA, YA, XB, YB, XC, YC, the coordinates of
-    the vertices of the triangle, given in counterclockwise order.
-
-    Output, double TRIANGLE_AREA, the signed area of the triangle.
-*/
-{
-  double value;
-
-  value = 0.5 * ( 
-      ( xb - xa ) * ( yc - ya ) 
-    - ( xc - xa ) * ( yb - ya ) );
-
-  return value;
-}
-/******************************************************************************/
 
 char ch_cap ( char ch )
 

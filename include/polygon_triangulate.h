@@ -1,15 +1,14 @@
 #pragma once
 
-int *polygon_triangulate ( int n, double x[], double y[] );
+#include "geometry_type.h"
 
-double triangle_area ( double xa, double ya, double xb, double yb, double xc, double yc );
-double angle_degree ( double x1, double y1, double x2, double y2, double x3, double y3 );
-int between ( double xa, double ya, double xb, double yb, double xc, double yc );
-int collinear ( double xa, double ya, double xb, double yb, double xc, double yc );
-int diagonal ( int im1, int ip1, int n, int prev[], int next[], double x[], double y[] );
-int diagonalie ( int im1, int ip1, int n, int next[], double x[], double y[] );
-int in_cone ( int im1, int ip1, int n, int prev[], int next[], double x[], double y[] );
-int intersect ( double xa, double ya, double xb, double yb, double xc, double yc, double xd, double yd );
-int intersect_prop ( double xa, double ya, double xb, double yb, double xc, double yc, double xd, double yd );
-double polygon_area ( int n, double x[], double y[] );
+vidx_t* polygon_triangulate(uint32_t n, coord_t x[], coord_t y[]);
+
+coord_t angle_degree(coord_t x1, coord_t y1, coord_t x2, coord_t y2, coord_t x3, coord_t y3);
+coord_t polygon_area(uint32_t n, coord_t x[n], coord_t y[n]);
+coord_t triangle_area(coord_t xa, coord_t ya, coord_t xb, coord_t yb, coord_t xc, coord_t yc );
+
+bool between(coord_t xa, coord_t ya, coord_t xb, coord_t yb, coord_t xc, coord_t yc);
+bool collinear(coord_t xa, coord_t ya, coord_t xb, coord_t yb, coord_t xc, coord_t yc);
+bool intersects(coord_t xa, coord_t ya, coord_t xb, coord_t yb, coord_t xc, coord_t yc, coord_t xd, coord_t yd);
 

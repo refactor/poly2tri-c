@@ -5,12 +5,12 @@
 
 
 TEST only_one(void) {
-    double x[] = {8.0, 7.0, 6.0, 7.0};
-    double y[] = {0.0, 10.0, 0.0, -10.0};
+    coord_t x[] = {8.0, 7.0, 6.0, 7.0};
+    coord_t y[] = {0.0, 10.0, 0.0, -10.0};
 
     int n = 3;//ARR_LEN(x);
-    int* triangles = polygon_triangulate(n, x, y);
-    i4mat_transpose_print(3, n-2, triangles, "Only One Triangle");
+    vidx_t* triangles = polygon_triangulate(n, x, y);
+//    i4mat_transpose_print(3, n-2, (int*)triangles, "Only One Triangle");
 
     boxed_triangle expected_triangles[] = {
         {1,2,0},
@@ -23,10 +23,10 @@ TEST only_one(void) {
 }
 
 TEST illegal_one(void) {
-    double x[] = {8.0, 7.0, 7.0, 7.0};
-    double y[] = {0.0, 10.0, 10.0, -10.0};
+    coord_t x[] = {8.0, 7.0, 7.0, 7.0};
+    coord_t y[] = {0.0, 10.0, 10.0, -10.0};
     int n = ARR_LEN(x);
-    int* triangles = polygon_triangulate(n, x, y);
+    vidx_t* triangles = polygon_triangulate(n, x, y);
     ASSERT_EQ(NULL, triangles);
     
     PASS();

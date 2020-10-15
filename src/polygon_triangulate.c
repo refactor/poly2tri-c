@@ -11,6 +11,10 @@
 #define THE_MIN(a, b) ((a) < (b) ? (a) : (b))
 #define THE_MAX(a, b) ((a) > (b) ? (a) : (b))
 
+#define THE_ABS(expr) ((expr) >= (__typeof__(expr))0 ? (expr) : -(expr))
+
+#define THE_ATAN2(y,x) _Generic((y), float:atan2f(y,x), double:atan2(y,x))
+
 /**
   Purpose:
     ANGLE_DEGREE returns the degree angle defined by three points.
@@ -37,33 +41,23 @@
     in degrees.  0 <= VALUE < 360.  If either ray has zero length,
     then VALUE is set to 0.
 */
-double angle_degree ( double x1, double y1, double x2, double y2, double x3, double y3 )
+#define r8_pi 3.141592653589793
+coord_t angle_degree(coord_t x1, coord_t y1, coord_t x2, coord_t y2, coord_t x3, coord_t y3 )
 {
-  double r8_pi = 3.141592653589793;
-  double value;
-  double x;
-  double y;
 
-  x = ( x3 - x2 ) * ( x1 - x2 ) + ( y3 - y2 ) * ( y1 - y2 );
+    __auto_type x = ( x3 - x2 ) * ( x1 - x2 ) + ( y3 - y2 ) * ( y1 - y2 );
+    __auto_type y = ( x3 - x2 ) * ( y1 - y2 ) - ( y3 - y2 ) * ( x1 - x2 );
 
-  y = ( x3 - x2 ) * ( y1 - y2 ) - ( y3 - y2 ) * ( x1 - x2 );
-
-  if ( x == 0.0 && y == 0.0 )
-  {
-    value = 0.0;
-  }
-  else
-  {
-    value = atan2 ( y, x );
-
-    if ( value < 0.0 )
-    {
-      value = value + 2.0 * r8_pi;
+    if ( x == 0.0 && y == 0.0 ) {
+        return 0.0;
     }
-    value = 180.0 * value / r8_pi;
-  }
-
-  return value;
+    else {
+        __auto_type value = THE_ATAN2( y, x );
+        if ( value < 0.0 ) {
+            value += 2.0 * r8_pi;
+        }
+        return 180.0 * value / r8_pi;
+    }
 }
 
 
@@ -97,34 +91,50 @@ double angle_degree ( double x1, double y1, double x2, double y2, double x3, dou
 
     Output, int BETWEEN, is TRUE if C is between A and B.
 */
-int between ( double xa, double ya, double xb, double yb, double xc, double yc )
+bool between(coord_t xa, coord_t ya, coord_t xb, coord_t yb, coord_t xc, coord_t yc)
 {
-  int value;
-  double xmax;
-  double xmin;
-  double ymax;
-  double ymin;
+    if ( ! collinear( xa, ya, xb, yb, xc, yc ) ) {
+        return false;
+    }
 
-  if ( ! collinear ( xa, ya, xb, yb, xc, yc ) )
-  {
-    value = 0;
-  }
-  else if ( fabs ( ya - yb ) < fabs ( xa - xb ) )
-  {
-    xmax = THE_MAX ( xa, xb );
-    xmin = THE_MIN ( xa, xb );
-    value = ( xmin <= xc && xc <= xmax );
-  }
-  else
-  {
-    ymax = THE_MAX ( ya, yb );
-    ymin = THE_MAX ( ya, yb );
-    value = ( ymin <= yc && yc <= ymax );
-  }
-
-  return value;
+    __typeof__(xa) xmax;
+    __typeof__(xa) xmin;
+    __typeof__(ya) ymax;
+    __typeof__(ya) ymin;
+    if ( THE_ABS ( ya - yb ) < THE_ABS ( xa - xb ) ) {
+        xmax = THE_MAX ( xa, xb );
+        xmin = THE_MIN ( xa, xb );
+        return ( xmin <= xc && xc <= xmax );
+    }
+    else {
+        ymax = THE_MAX ( ya, yb );
+        ymin = THE_MAX ( ya, yb );
+        return ( ymin <= yc && yc <= ymax );
+    }
 }
 
+/**
+  Purpose:
+    TRIANGLE_AREA computes the signed area of a triangle.
+
+  Modified:
+    05 May 2014
+
+  Author:
+    John Burkardt
+
+  Parameters:
+    Input, double XA, YA, XB, YB, XC, YC, the coordinates of
+    the vertices of the triangle, given in counterclockwise order.
+
+    Output, double TRIANGLE_AREA, the signed area of the triangle.
+*/
+coord_t triangle_area(coord_t xa, coord_t ya, coord_t xb, coord_t yb, coord_t xc, coord_t yc)
+{
+    return 0.5 * ( 
+          ( xb - xa ) * ( yc - ya ) 
+        - ( xc - xa ) * ( yb - ya ) );
+}
 
 /**
   Purpose:
@@ -161,43 +171,28 @@ int between ( double xa, double ya, double xb, double yb, double xc, double yc )
     Output, int COLLINEAR, is TRUE if the points are judged 
     to be collinear.
 */
-int collinear ( double xa, double ya, double xb, double yb, double xc, double yc )
+#define r8_eps 2.220446049250313E-016
+bool collinear(coord_t xa, coord_t ya, coord_t xb, coord_t yb, coord_t xc, coord_t yc)
 {
-  double area;
-  const double r8_eps = 2.220446049250313E-016;
-  double side_ab_sq;
-  double side_bc_sq;
-  double side_ca_sq;
-  double side_max_sq;
-  int value;
+    __auto_type side_ab_sq = (xa - xb) * (xa - xb) + (ya - yb) * (ya - yb);
+    __auto_type side_bc_sq = (xb - xc) * (xb - xc) + (yb - yc) * (yb - yc);
+    __auto_type side_ca_sq = (xc - xa) * (xc - xa) + (yc - ya) * (yc - ya);
 
-  area = triangle_area ( xa, ya, xb, yb, xc, yc );
+    __auto_type side_max_sq = THE_MAX(side_ab_sq, THE_MAX(side_bc_sq, side_ca_sq));
 
-  side_ab_sq = pow ( xa - xb, 2 ) + pow ( ya - yb, 2 );
-  side_bc_sq = pow ( xb - xc, 2 ) + pow ( yb - yc, 2 );
-  side_ca_sq = pow ( xc - xa, 2 ) + pow ( yc - ya, 2 );
+    if ( side_max_sq <= r8_eps ) {
+        return true;
+    }
+    else if ( 2.0 * THE_ABS(triangle_area(xa, ya, xb, yb, xc, yc)) <= r8_eps * side_max_sq) {
+        return true;
+    }
 
-  side_max_sq = THE_MAX ( side_ab_sq, THE_MAX ( side_bc_sq, side_ca_sq ) );
-
-  if ( side_max_sq <= r8_eps )
-  {
-    value = 1;
-  }
-  else if ( 2.0 * fabs ( area ) <= r8_eps * side_max_sq )
-  {
-    value = 1;
-  }
-  else
-  {
-    value = 0;
-  }
-
-  return value;
+    return false;
 }
 
 /**
   Purpose:
-    DIAGONAL: VERTEX(IM1) to VERTEX(IP1) is a proper internal diagonal.
+    IN_CONE is TRUE if the diagonal VERTEX(IM1):VERTEX(IP1) is strictly internal.
 
   Modified:
     05 May 2014
@@ -214,29 +209,28 @@ int collinear ( double xa, double ya, double xb, double yb, double xc, double yc
     LC: QA448.D38.
 
   Parameters:
-
-    Input, int IM1, IP1, the indices of two vertices.
-    Input, int N, the number of vertices.
-    Input, int PREV_NODE[N], the previous neighbor of each vertex.
-    Input, int NEXT_NODE[N], the next neighbor of each vertex.
+    Input, IM1, IP1, the indices of two vertices.
+    Input, PREV_NODE[N], the previous neighbor of each vertex.
+    Input, NEXT_NODE[N], the next neighbor of each vertex.
     Input, double X[N], Y[N], the coordinates of each vertex.
 
-    Output, int DIAGONAL, the value of the test.
+    Output, int IN_CONE, the value of the test.
 */
-int diagonal ( int im1, int ip1, int n, int prev_node[], int next_node[], double x[], double y[] )
+bool in_cone(vidx_t im1, vidx_t ip1, vidx_t prev_node[], vidx_t next_node[], coord_t x[], coord_t y[])
 {
-  int value;
-  int value1;
-  int value2;
-  int value3;
+    __auto_type im2 = prev_node[im1];
+    __auto_type i   = next_node[im1];
 
-  value1 = in_cone ( im1, ip1, n, prev_node, next_node, x, y );
-  value2 = in_cone ( ip1, im1, n, prev_node, next_node, x, y );
-  value3 = diagonalie ( im1, ip1, n, next_node, x, y );
-
-  value = ( value1 && value2 && value3 );
-
-  return value;
+    if (0.0 <= triangle_area(x[im1], y[im1], x[i], y[i], x[im2], y[im2])) {
+        bool t2 = triangle_area(x[im1], y[im1], x[ip1], y[ip1], x[im2], y[im2]) > 0.0;
+        bool t3 = triangle_area(x[ip1], y[ip1], x[im1], y[im1], x[i], y[i]) > 0.0;
+        return ( t2 && t3 );
+    }
+    else {
+        bool t4 = triangle_area(x[im1], y[im1], x[ip1], y[ip1], x[i], y[i]) >= 0.0;
+        bool t5 = triangle_area(x[ip1], y[ip1], x[im1], y[im1], x[im2], y[im2]) >= 0.0;
+        return ! ( t4 && t5 );
+    }
 }
 
 /**
@@ -269,57 +263,39 @@ int diagonal ( int im1, int ip1, int n, int prev_node[], int next_node[], double
 
     Output, int DIAGONALIE, the value of the test.
 */
-int diagonalie ( int im1, int ip1, int n, int next_node[], double x[], double y[] )
+bool diagonalie(vidx_t im1, vidx_t ip1, vidx_t next_node[], coord_t x[], coord_t y[])
 {
-  int first;
-  int j;
-  int jp1;
-  int value;
-  int value2;
+    vidx_t first = im1;
+    vidx_t j = first;
+    vidx_t jp1 = next_node[first];
 
-  first = im1;
-  j = first;
-  jp1 = next_node[first];
+    /*
+    For each edge VERTEX(J):VERTEX(JP1) of the polygon:
+    */
+    while ( true ) {
+        /*
+        Skip any edge that includes vertex IM1 or IP1.
+        */
+        if ( j == im1 || j == ip1 || jp1 == im1 || jp1 == ip1 ) {
+        }
+        else {
+            if (intersects(x[im1], y[im1], x[ip1], y[ip1], x[j], y[j], x[jp1], y[jp1])) {
+                return false;
+            }
+        }
 
-  value = 1;
-/*
-  For each edge VERTEX(J):VERTEX(JP1) of the polygon:
-*/
-  while ( 1 )
-  {
-/*
-  Skip any edge that includes vertex IM1 or IP1.
-*/
-    if ( j == im1 || j == ip1 || jp1 == im1 || jp1 == ip1 )
-    {
+        j = jp1;
+        jp1 = next_node[j];
+
+        if ( j == first ) {
+            return true;
+        }
     }
-    else
-    {
-      value2 = intersect ( x[im1], y[im1], x[ip1], y[ip1], x[j], y[j], 
-        x[jp1], y[jp1] );
-
-      if ( value2 )
-      {
-        value = 0;
-        break;
-      }
-    }
-    j = jp1;
-    jp1 = next_node[j];
-
-    if ( j == first )
-    {
-      break;
-    }
-  }
-
-  return value;
 }
 
 /**
   Purpose:
-    IN_CONE is TRUE if the diagonal VERTEX(IM1):VERTEX(IP1) is strictly internal.
-
+    DIAGONAL: VERTEX(IM1) to VERTEX(IP1) is a proper internal diagonal.
 
   Modified:
     05 May 2014
@@ -336,102 +312,21 @@ int diagonalie ( int im1, int ip1, int n, int next_node[], double x[], double y[
     LC: QA448.D38.
 
   Parameters:
+
     Input, int IM1, IP1, the indices of two vertices.
-    Input, int N, the number of vertices.
     Input, int PREV_NODE[N], the previous neighbor of each vertex.
     Input, int NEXT_NODE[N], the next neighbor of each vertex.
     Input, double X[N], Y[N], the coordinates of each vertex.
 
-    Output, int IN_CONE, the value of the test.
+    Output, int DIAGONAL, the value of the test.
 */
-int in_cone ( int im1, int ip1, int n, int prev_node[], int next_node[], double x[], double y[] )
+bool diagonal(vidx_t im1, vidx_t ip1, vidx_t prev_node[], vidx_t next_node[], coord_t x[], coord_t y[])
 {
-  int i;
-  int im2;
-  double t1;
-  double t2;
-  double t3;
-  double t4;
-  double t5;
-  int value;
+    bool value1 = in_cone(im1, ip1, prev_node, next_node, x, y);
+    bool value2 = in_cone(ip1, im1, prev_node, next_node, x, y);
+    bool value3 = diagonalie(im1, ip1, next_node, x, y);
 
-  im2 = prev_node[im1];
-  i = next_node[im1];
-
-  t1 = triangle_area ( x[im1], y[im1], x[i], y[i], x[im2], y[im2] );
-
-  if ( 0.0 <= t1 )
-  {
-    t2 = triangle_area ( x[im1], y[im1], x[ip1], y[ip1], x[im2], y[im2] );
-    t3 = triangle_area ( x[ip1], y[ip1], x[im1], y[im1], x[i], y[i] );
-    value = ( ( 0.0 < t2 ) && ( 0.0 < t3 ) );
-  }
-  else
-  {
-    t4 = triangle_area ( x[im1], y[im1], x[ip1], y[ip1], x[i], y[i] );
-    t5 = triangle_area ( x[ip1], y[ip1], x[im1], y[im1], x[im2], y[im2] );
-    value = ! ( ( 0.0 <= t4 ) && ( 0.0 <= t5 ) );
-  }
-  return value;
-}
-
-/**
-  Purpose:
-    INTERSECT is true if lines VA:VB and VC:VD intersect.
-
-  Discussion:
-    Thanks to Gene Dial for correcting the call to intersect_prop, 
-    08 September 2016.
- 
-  Modified:
-    08 September 2016
-
-  Author:
-    Original C version by Joseph ORourke.
-    This C version by John Burkardt.
-
-  Reference:
-    Joseph ORourke,
-    Computational Geometry in C,
-    Cambridge, 1998,
-    ISBN: 0521649765,
-    LC: QA448.D38.
-
-  Parameters:
-    Input, double XA, YA, XB, YB, XC, YC, XD, YD, the X and Y 
-    coordinates of the four vertices.
-
-    Output, int INTERSECT, the value of the test.
-*/
-int intersect ( double xa, double ya, double xb, double yb, double xc, double yc, double xd, double yd )
-{
-  int value;
-
-  if ( intersect_prop ( xa, ya, xb, yb, xc, yc, xd, yd ) )
-  {
-    value = 1;
-  }
-  else if ( between ( xa, ya, xb, yb, xc, yc ) )
-  {
-    value = 1;
-  }
-  else if ( between ( xa, ya, xb, yb, xd, yd ) )
-  {
-    value = 1;
-  }
-  else if ( between ( xc, yc, xd, yd, xa, ya ) )
-  {
-    value = 1;
-  }
-  else if ( between ( xc, yc, xd, yd, xb, yb ) )
-  {
-    value = 1;
-  }
-  else
-  {
-    value = 0;
-  }
-  return value;
+    return ( value1 && value2 && value3 );
 }
 
 /**
@@ -451,18 +346,12 @@ int intersect ( double xa, double ya, double xb, double yb, double xc, double yc
     Input, int L1, L2, two values whose exclusive OR is needed.
     Output, int L4_XOR, the exclusive OR of L1 and L2.
 */
-int l4_xor ( int l1, int l2 )
+bool l4_xor(bool l1, bool l2)
 {
-  int value;
-  int value1;
-  int value2;
+    bool value1 = (     l1   && ( ! l2 ) );
+    bool value2 = ( ( ! l1 ) &&     l2   );
 
-  value1 = (     l1   && ( ! l2 ) );
-  value2 = ( ( ! l1 ) &&     l2   );
-
-  value = ( value1 || value2 );
-
-  return value;
+    return ( value1 || value2 );
 }
 
 /**
@@ -490,50 +379,85 @@ int l4_xor ( int l1, int l2 )
     Input, double XA, YA, XB, YB, XC, YC, XD, YD, the X and Y coordinates of the four vertices.
     Output, int INTERSECT_PROP, the result of the test.
 */
-int intersect_prop ( double xa, double ya, double xb, double yb, double xc, double yc, double xd, double yd )
+bool intersect_prop(coord_t xa, coord_t ya, coord_t xb, coord_t yb, coord_t xc, coord_t yc, coord_t xd, coord_t yd)
 {
-  double t1;
-  double t2;
-  double t3;
-  double t4;
-  int value;
-  int value1;
-  int value2;
-  int value3;
-  int value4;
+    if ( collinear ( xa, ya, xb, yb, xc, yc ) ) {
+        return false;
+    }
+    else if ( collinear ( xa, ya, xb, yb, xd, yd ) ) {
+        return false;
+    }
+    else if ( collinear ( xc, yc, xd, yd, xa, ya ) ) {
+        return false;
+    }
+    else if ( collinear ( xc, yc, xd, yd, xb, yb ) ) {
+        return false;
+    }
+    else {
+        __auto_type t1 = triangle_area ( xa, ya, xb, yb, xc, yc );
+        __auto_type t2 = triangle_area ( xa, ya, xb, yb, xd, yd );
+        __auto_type t3 = triangle_area ( xc, yc, xd, yd, xa, ya );
+        __auto_type t4 = triangle_area ( xc, yc, xd, yd, xb, yb );
 
-  if ( collinear ( xa, ya, xb, yb, xc, yc ) )
-  {
-    value = 0;
-  }
-  else if ( collinear ( xa, ya, xb, yb, xd, yd ) )
-  {
-    value = 0;
-  }
-  else if ( collinear ( xc, yc, xd, yd, xa, ya ) )
-  {
-    value = 0;
-  }
-  else if ( collinear ( xc, yc, xd, yd, xb, yb ) )
-  {
-    value = 0;
-  }
-  else
-  {
-    t1 = triangle_area ( xa, ya, xb, yb, xc, yc );
-    t2 = triangle_area ( xa, ya, xb, yb, xd, yd );
-    t3 = triangle_area ( xc, yc, xd, yd, xa, ya );
-    t4 = triangle_area ( xc, yc, xd, yd, xb, yb );
-
-    value1 = ( 0.0 < t1 );
-    value2 = ( 0.0 < t2 );
-    value3 = ( 0.0 < t3 );
-    value4 = ( 0.0 < t4 );
-
-    value = ( l4_xor ( value1, value2 ) ) && ( l4_xor ( value3, value4 ) );
-  }
-  return value;
+        bool value1 = ( 0.0 < t1 );
+        bool value2 = ( 0.0 < t2 );
+        bool value3 = ( 0.0 < t3 );
+        bool value4 = ( 0.0 < t4 );
+        return ( l4_xor ( value1, value2 ) ) && ( l4_xor ( value3, value4 ) );
+    }
 }
+
+/**
+  Purpose:
+    INTERSECT is true if lines VA:VB and VC:VD intersects.
+
+  Discussion:
+    Thanks to Gene Dial for correcting the call to intersect_prop, 
+    08 September 2016.
+ 
+  Modified:
+    08 September 2016
+
+  Author:
+    Original C version by Joseph ORourke.
+    This C version by John Burkardt.
+
+  Reference:
+    Joseph ORourke,
+    Computational Geometry in C,
+    Cambridge, 1998,
+    ISBN: 0521649765,
+    LC: QA448.D38.
+
+  Parameters:
+    Input, double XA, YA, XB, YB, XC, YC, XD, YD, the X and Y 
+    coordinates of the four vertices.
+
+    Output, int INTERSECT, the value of the test.
+*/
+bool intersects(coord_t xa, coord_t ya, coord_t xb, coord_t yb,
+                coord_t xc, coord_t yc, coord_t xd, coord_t yd)
+{
+    if ( intersect_prop ( xa, ya, xb, yb, xc, yc, xd, yd ) ) {
+        return true;
+    }
+    else if ( between( xa, ya, xb, yb, xc, yc ) ) {
+        return true;
+    }
+    else if ( between( xa, ya, xb, yb, xd, yd ) ) {
+        return true;
+    }
+    else if ( between ( xc, yc, xd, yd, xa, ya ) ) {
+        return true;
+    }
+    else if ( between ( xc, yc, xd, yd, xb, yb ) ) {
+        return true;
+    }
+    else {
+        return false;
+    }
+}
+
 
 /**
   Purpose:
@@ -554,22 +478,16 @@ int intersect_prop ( double xa, double ya, double xb, double yb, double xc, doub
     Input, double X[N], Y[N], the vertex coordinates.
     Output, double POLYGON_AREA, the area of the polygon.
 */
-double polygon_area ( int n, double x[], double y[] )
+coord_t polygon_area(uint32_t n, coord_t x[n], coord_t y[n])
 {
-  double area;
-  int i;
-  int im1;
+    coord_t area = (__typeof__(area))0;
+    for (vidx_t i = 0, im1 = n - 1; i < n; i++ ) {
+        area += x[im1] * y[i] - x[i] * y[im1];
+        im1 = i;
+    }
+    area = 0.5 * area;
 
-  area = 0.0;
-  im1 = n - 1;
-  for ( i = 0; i < n; i++ )
-  {
-    area = area + x[im1] * y[i] - x[i] * y[im1];
-    im1 = i;
-  }
-  area = 0.5 * area;
-
-  return area;
+    return area;
 }
 
 /**
@@ -608,150 +526,105 @@ double polygon_area ( int n, double x[], double y[] )
 
     Output, int TRIANGLES[3*(N-2)], the triangles of the triangulation.
 */
-int *polygon_triangulate ( int n, double x[], double y[] )
+#define angle_tol 5.7E-05
+vidx_t *polygon_triangulate(const uint32_t n, coord_t x[n], coord_t y[n])
 {
-  double angle;
-  const double angle_tol = 5.7E-05;
-  double area;
-  int *ear;
-  int i0;
-  int i1;
-  int i2;
-  int i3;
-  int i4;
-  int *next_node;
-  int node3;
-  int *prev_node;
-  int triangle_num;
-  int *triangles;
-/*
-  We must have at least 3 vertices.
-*/
-  if ( n < 3 ) {
-    ERR("POLYGON_TRIANGULATE - Fatal error!  N < 3." );
-    return NULL;
-  }
-/*
-  Consecutive vertices cannot be equal.
-*/
-  for (int node = 0, prev = n-1; node < n; node++ ) {
-    if ( x[prev] == x[node] && y[prev] == y[node] ) {
-      ERR("POLYGON_TRIANGULATE - Fatal error!  Two consecutive nodes are identical." );
-      return NULL;
+
+    // We must have at least 3 vertices.
+    if (n < 3) {
+        ERR("POLYGON_TRIANGULATE - Fatal error!  N < 3." );
+        return NULL;
     }
-    prev = node;
-  }
-/*
-  No node can be the vertex of an angle less than 1 degree 
-  in absolute value.
-*/
-  for (int node2 = 0, prev = n-1; node2 < n; node2++ ) {
-    node3 = ( ( node2 + 1 ) % n ); 
-
-    angle = angle_degree ( 
-      x[prev], y[prev], 
-      x[node2], y[node2], 
-      x[node3], y[node3] );
-
-    if ( fabs ( angle ) <= angle_tol )
-    {
-      ERR("POLYGON_TRIANGULATE - Fatal error!  Polygon has an angle smaller than %g,  accurring at node %d", angle_tol, node2);
-      return NULL;
+    // Consecutive vertices cannot be equal.
+    for (vidx_t current = 0, prev = n-1; current < n; current++ ) {
+        if ( x[prev] == x[current] && y[prev] == y[current] ) {
+          ERR("POLYGON_TRIANGULATE - Fatal error!  Two consecutive nodes are identical." );
+          return NULL;
+        }
+        prev = current;
     }
-    prev = node2;
-  }
-/*
-  Area must be positive.
-*/
-  area = polygon_area ( n, x, y );
-  if ( area <= 0.0 ) {
-    ERR("POLYGON_TRIANGULATE - Fatal error!  Polygon has zero or negative area." );
-    return NULL;
-  }
+    // No node can be the vertex of an angle less than 1 degree 
+    // in absolute value.
+    for (vidx_t current = 0, prev = n-1; current < n; current++ ) {
+        vidx_t next = ( ( current + 1 ) % n ); 
 
-  triangles = ( int * ) malloc ( 3 * ( n - 2 ) * sizeof ( int ) );
-/*
-  PREV_NODE and NEXT_NODE point to the previous and next nodes.
-*/
-  prev_node = ( int * ) malloc ( n * sizeof ( int ) );
-  next_node = ( int * ) malloc ( n * sizeof ( int ) );
+        __auto_type angle = angle_degree(x[prev], y[prev], 
+                                         x[current], y[current], 
+                                         x[next], y[next] );
 
-  int i = 0;
-  prev_node[i] = n - 1;
-  next_node[i] = i + 1;
-
-  for ( i = 1; i < n - 1; i++ )
-  {
-    prev_node[i] = i - 1;
-    next_node[i] = i + 1;
-  }
-
-  i = n - 1;
-  prev_node[i] = i - 1;
-  next_node[i] = 0;
-/*
-  EAR indicates whether the node and its immediate neighbors form an ear
-  that can be sliced off immediately.
-*/
-  ear = ( int * ) malloc ( n * sizeof ( int ) );
-  for ( i = 0; i < n; i++ )
-  {
-    ear[i] = diagonal ( prev_node[i], next_node[i], n, prev_node, next_node, x, y );
-  }
-
-  triangle_num = 0;
-
-  i2 = 0;
-
-  while ( triangle_num < n - 3 )
-  {
-/*
-  If I2 is an ear, gather information necessary to carry out
-  the slicing operation and subsequent "healing".
-*/
-    if ( ear[i2] )
-    {
-      i3 = next_node[i2];
-      i4 = next_node[i3];
-      i1 = prev_node[i2];
-      i0 = prev_node[i1];
-/*
-  Make vertex I2 disappear.
-*/
-      next_node[i1] = i3;
-      prev_node[i3] = i1;
-/*
-  Update the earity of I1 and I3, because I2 disappeared.
-*/
-      ear[i1] = diagonal ( i0, i3, n, prev_node, next_node, x, y );
-      ear[i3] = diagonal ( i1, i4, n, prev_node, next_node, x, y );
-/*
-  Add the diagonal [I3, I1, I2] to the list.
-*/
-      triangles[0+triangle_num*3] = i3;
-      triangles[1+triangle_num*3] = i1;
-      triangles[2+triangle_num*3] = i2;
-      triangle_num = triangle_num + 1;
+        if ( THE_ABS( angle ) <= angle_tol ) {
+            ERR("POLYGON_TRIANGULATE - Fatal error! Polygon has an angle smaller than %g, accurring at node %d", angle_tol, current);
+            return NULL;
+        }
+        prev = current;
     }
-/*
-  Try the next vertex.
-*/
-    i2 = next_node[i2];
-  }
-/*
-  The last triangle is formed from the three remaining vertices.
-*/
-  i3 = next_node[i2];
-  i1 = prev_node[i2];
+    // Area must be positive.
+    if (polygon_area(n, x, y) <= 0.0) {
+        ERR("POLYGON_TRIANGULATE - Fatal error!  Polygon has zero or negative area." );
+        return NULL;
+    }
 
-  triangles[0+triangle_num*3] = i3;
-  triangles[1+triangle_num*3] = i1;
-  triangles[2+triangle_num*3] = i2;
-  triangle_num = triangle_num + 1;
+    vidx_t* triangles = (__typeof__(triangles)) malloc ( 3 * ( n - 2 ) * sizeof ( *triangles ) );
 
-  free ( ear );
-  free ( next_node );
-  free ( prev_node );
+    // PREV_NODE and NEXT_NODE point to the previous and next nodes.
+    vidx_t* prev_node = (__typeof__(prev_node)) malloc ( n * sizeof ( *prev_node ) );
+    vidx_t* next_node = (__typeof__(next_node)) malloc ( n * sizeof ( *next_node ) );
 
-  return triangles;
+    for (vidx_t i = 0; i < (vidx_t)n; i++ ) {
+        prev_node[i] = (i - 1 + n) % n;
+        next_node[i] = (i + 1) % n;
+    }
+
+    // EAR indicates whether the node and its immediate neighbors form an ear
+    // that can be sliced off immediately.
+    bool* ear = (__typeof__(ear)) malloc ( n * sizeof ( *ear ) );
+    for (vidx_t i = 0; i < (vidx_t)n; i++ ) {
+        ear[i] = diagonal(prev_node[i], next_node[i], prev_node, next_node, x, y);
+    }
+
+    uint32_t triangle_idx = 0;
+
+    vidx_t i0;
+    vidx_t i1;
+    vidx_t i2;
+    vidx_t i3;
+    vidx_t i4;
+
+    i2 = 0;
+    while (triangle_idx < n - 3) {
+        // If I2 is an ear, gather information necessary to carry out
+        // the slicing operation and subsequent "healing".
+        if (ear[i2]) {
+            i3 = next_node[i2];
+            i4 = next_node[i3];
+            i1 = prev_node[i2];
+            i0 = prev_node[i1];
+            // Make vertex I2 disappear.
+            next_node[i1] = i3;
+            prev_node[i3] = i1;
+            // Update the earity of I1 and I3, because I2 disappeared.
+            ear[i1] = diagonal ( i0, i3, prev_node, next_node, x, y );
+            ear[i3] = diagonal ( i1, i4, prev_node, next_node, x, y );
+            // Add the diagonal [I3, I1, I2] to the list.
+            triangles[0+triangle_idx*3] = i3;
+            triangles[1+triangle_idx*3] = i1;
+            triangles[2+triangle_idx*3] = i2;
+            ++triangle_idx;
+        }
+        // Try the next vertex.
+        i2 = next_node[i2];
+    }
+    // The last triangle is formed from the three remaining vertices.
+    i3 = next_node[i2];
+    i1 = prev_node[i2];
+
+    triangles[0+triangle_idx*3] = i3;
+    triangles[1+triangle_idx*3] = i1;
+    triangles[2+triangle_idx*3] = i2;
+
+    free ( ear );
+    free ( next_node );
+    free ( prev_node );
+
+    return triangles;
 }

@@ -1,4 +1,5 @@
-double x[] = {
+#include "geometry_type.h"
+coord_t x[] = {
     8,
     7,
     6,
@@ -10,7 +11,7 @@ double x[] = {
     0,
     4
 };
-double y[] = {
+coord_t y[] = {
     0,
     10,
     0,
@@ -23,7 +24,7 @@ double y[] = {
     -2
 };
 
-int expected_triangles[][3] = {
+vidx_t expected_triangles[][3] = {
 	{2, 0, 1},
 	{4, 2, 3},
 	{6, 4, 5},

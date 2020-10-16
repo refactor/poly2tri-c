@@ -1,7 +1,7 @@
 #ifndef __APPLE__
 #define _GNU_SOURCE
 #endif
-
+#include "../src/mylog.h"
 #include "greatest.h"
 
 #include "simple_gtest.h"
@@ -12,6 +12,7 @@
 GREATEST_MAIN_DEFS();
 
 int main(int argc, char* argv[]) {
+    INFO("vidx_t.sz: %zu, coord_t.sz: %zu", sizeof(vidx_t), sizeof(coord_t));
 
     GREATEST_MAIN_BEGIN();
 

@@ -3,6 +3,6 @@
 #include <stdbool.h>
 #include <stdint.h>
 
-typedef double coord_t;
-typedef uint32_t vidx_t;
+typedef float coord_t;
+typedef uint16_t vidx_t;
 

@@ -1,6 +1,5 @@
 #pragma once
 
-
 #ifdef __APPLE__
 #include <pthread.h>
 #define thrd_id() ({\
@@ -10,16 +9,12 @@
         })
 #else
 
-#define _GNU_SOURCE
-
-#include <unistd.h>
-#include <sys/syscall.h>
-#include <sys/types.h>
+#include <pthread.h>
 #include <stdint.h>
 
-uint64_t thrd_id() {
-    return (uint64_t)syscall(SYS_gettid);
-}
+#define thrd_id() ({\
+    (uint64_t)pthread_self();\
+        })
 #endif
 
 #include <inttypes.h>
@@ -38,7 +33,7 @@ enum {
     LOGLEVEL_NONE
 };
 
-const char * log_level_strings [] = { "ERRO", "WARN", "INFO", "DEBG", "NONE" };
+static const char * log_level_strings [] = { "ERRO", "WARN", "INFO", "DEBG", "NONE" };
 
 
 #define LOGLEVEL_DEBUG_COLOR(str)    "\033[30;1m" str "\033[0m"

@@ -1,3 +1,4 @@
+#include "../src/mylog.h"
 #include "polygon_triangulate.h"
 
 #include "greatest.h"
@@ -9,8 +10,15 @@ TEST i18_test(void) {
     printf("tri.sz: %zu\n", sizeof(expected_triangles));
     ASSERT_EQ(ARR_LEN(x), ARR_LEN(y));
 
-    const int n = ARR_LEN(x);
-    vidx_t* triangles = polygon_triangulate(n, x, y);
+    int n = ARR_LEN(x);
+    DBG("arr.len: %u", n);
+    coord_seq_t* cs = allocate_coord_seq(n);
+    for (uint32_t i=0; i<cs->n; ++i) {
+        coord_seq_setx(cs, i, x[i]);
+        coord_seq_sety(cs, i, y[i]);
+    }
+    for (uint32_t i=0; i<cs->n; ++i) DBG("x[%u] = %f, y[%u] = %f", i, coord_seq_getx(cs, i),i,coord_seq_gety(cs,i));
+    vidx_t* triangles = polygon_triangulate(cs);
     const int tri_num = n - 2;
 //    i4mat_transpose_print(3, tri_num, (int*)triangles, "Gotcha Triangles");
 

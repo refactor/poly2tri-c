@@ -33,7 +33,6 @@ enum {
     LOGLEVEL_NONE
 };
 
-static const char * log_level_strings [] = { "ERRO", "WARN", "INFO", "DEBG", "NONE" };
 
 
 #define LOGLEVEL_DEBUG_COLOR(str)    "\033[30;1m" str "\033[0m"
@@ -43,7 +42,7 @@ static const char * log_level_strings [] = { "ERRO", "WARN", "INFO", "DEBG", "NO
 #define LOGLEVEL_CRITICAL_COLOR(str) "\033[1;31m" str "\033[0m"
 
 #define LOG(level, fmt, ...) \
-    do { if (level <= LOGLEVEL) fprintf(stdout, level##_COLOR("[%34s#%-5d@(tid:%"PRIx64")]") " " fmt "\r\n", __FUNCTION__,__LINE__,thrd_id(), ##__VA_ARGS__); } while(0)
+    do { if (level <= LOGLEVEL) fprintf(stdout, level##_COLOR("[%34s#%-5d@(tid:%"PRIx64")]") " " fmt "\r\n", __func__,__LINE__,thrd_id(), ##__VA_ARGS__); } while(0)
 
 
 #define DBG(fmt, ...)  LOG(LOGLEVEL_DEBUG,   fmt, ##__VA_ARGS__)

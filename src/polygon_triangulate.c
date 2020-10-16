@@ -5,7 +5,13 @@
 # include <time.h>
 
 # include "polygon_triangulate.h"
+
+#define GEOM_TYPE_IMPLEMENTATION
+#include "geometry_type.h"
+
 # include "fmt_utils.h"
+
+#define MYLOG_IMPLEMENTATION
 # include "mylog.h"
 
 #define THE_MIN(a, b) ((a) < (b) ? (a) : (b))
@@ -42,7 +48,7 @@
     then VALUE is set to 0.
 */
 #define r8_pi 3.141592653589793
-coord_t angle_degree(coord_t x1, coord_t y1, coord_t x2, coord_t y2, coord_t x3, coord_t y3 )
+coord_t angle_degree(const coord_t x1, const coord_t y1, const coord_t x2, const coord_t y2, const coord_t x3, const coord_t y3 )
 {
 
     __auto_type x = ( x3 - x2 ) * ( x1 - x2 ) + ( y3 - y2 ) * ( y1 - y2 );
@@ -91,24 +97,20 @@ coord_t angle_degree(coord_t x1, coord_t y1, coord_t x2, coord_t y2, coord_t x3,
 
     Output, int BETWEEN, is TRUE if C is between A and B.
 */
-bool between(coord_t xa, coord_t ya, coord_t xb, coord_t yb, coord_t xc, coord_t yc)
+bool between(const coord_t xa, const coord_t ya, const coord_t xb, const coord_t yb, const coord_t xc, const coord_t yc)
 {
     if ( ! collinear( xa, ya, xb, yb, xc, yc ) ) {
         return false;
     }
 
-    __typeof__(xa) xmax;
-    __typeof__(xa) xmin;
-    __typeof__(ya) ymax;
-    __typeof__(ya) ymin;
     if ( THE_ABS ( ya - yb ) < THE_ABS ( xa - xb ) ) {
-        xmax = THE_MAX ( xa, xb );
-        xmin = THE_MIN ( xa, xb );
+        __auto_type xmax = THE_MAX ( xa, xb );
+        __auto_type xmin = THE_MIN ( xa, xb );
         return ( xmin <= xc && xc <= xmax );
     }
     else {
-        ymax = THE_MAX ( ya, yb );
-        ymin = THE_MAX ( ya, yb );
+        __auto_type ymax = THE_MAX ( ya, yb );
+        __auto_type ymin = THE_MAX ( ya, yb );
         return ( ymin <= yc && yc <= ymax );
     }
 }
@@ -129,7 +131,7 @@ bool between(coord_t xa, coord_t ya, coord_t xb, coord_t yb, coord_t xc, coord_t
 
     Output, double TRIANGLE_AREA, the signed area of the triangle.
 */
-coord_t triangle_area(coord_t xa, coord_t ya, coord_t xb, coord_t yb, coord_t xc, coord_t yc)
+coord_t triangle_area(const coord_t xa, const coord_t ya, const coord_t xb, const coord_t yb, const coord_t xc, const coord_t yc)
 {
     return 0.5 * ( 
           ( xb - xa ) * ( yc - ya ) 
@@ -172,7 +174,7 @@ coord_t triangle_area(coord_t xa, coord_t ya, coord_t xb, coord_t yb, coord_t xc
     to be collinear.
 */
 #define r8_eps 2.220446049250313E-016
-bool collinear(coord_t xa, coord_t ya, coord_t xb, coord_t yb, coord_t xc, coord_t yc)
+bool collinear(const coord_t xa, const coord_t ya, const coord_t xb, const coord_t yb, const coord_t xc, const coord_t yc)
 {
     __auto_type side_ab_sq = (xa - xb) * (xa - xb) + (ya - yb) * (ya - yb);
     __auto_type side_bc_sq = (xb - xc) * (xb - xc) + (yb - yc) * (yb - yc);
@@ -216,19 +218,27 @@ bool collinear(coord_t xa, coord_t ya, coord_t xb, coord_t yb, coord_t xc, coord
 
     Output, int IN_CONE, the value of the test.
 */
-bool in_cone(vidx_t im1, vidx_t ip1, vidx_t prev_node[], vidx_t next_node[], coord_t x[], coord_t y[])
+bool in_cone(vidx_t im1, vidx_t ip1, vidx_t prev_node[], vidx_t next_node[], const coord_seq_t* cs)
 {
     __auto_type im2 = prev_node[im1];
     __auto_type i   = next_node[im1];
 
-    if (0.0 <= triangle_area(x[im1], y[im1], x[i], y[i], x[im2], y[im2])) {
-        bool t2 = triangle_area(x[im1], y[im1], x[ip1], y[ip1], x[im2], y[im2]) > 0.0;
-        bool t3 = triangle_area(x[ip1], y[ip1], x[im1], y[im1], x[i], y[i]) > 0.0;
+    __auto_type x_im1 = coord_seq_getx(cs, im1);
+    __auto_type y_im1 = coord_seq_gety(cs, im1);
+    __auto_type x_im2 = coord_seq_getx(cs, im2);
+    __auto_type y_im2 = coord_seq_gety(cs, im2);
+    __auto_type x_ip1 = coord_seq_getx(cs, ip1);
+    __auto_type y_ip1 = coord_seq_gety(cs, ip1);
+    __auto_type x_i = coord_seq_getx(cs, i);
+    __auto_type y_i = coord_seq_gety(cs, i);
+    if (0.0 <= triangle_area(x_im1, y_im1, x_i, y_i, x_im2, y_im2)) {
+        bool t2 = triangle_area(x_im1, y_im1, x_ip1, y_ip1, x_im2, y_im2) > 0.0;
+        bool t3 = triangle_area(x_ip1, y_ip1, x_im1, y_im1, x_i, y_i) > 0.0;
         return ( t2 && t3 );
     }
     else {
-        bool t4 = triangle_area(x[im1], y[im1], x[ip1], y[ip1], x[i], y[i]) >= 0.0;
-        bool t5 = triangle_area(x[ip1], y[ip1], x[im1], y[im1], x[im2], y[im2]) >= 0.0;
+        bool t4 = triangle_area(x_im1, y_im1, x_ip1, y_ip1, x_i, y_i) >= 0.0;
+        bool t5 = triangle_area(x_ip1, y_ip1, x_im1, y_im1, x_im2, y_im2) >= 0.0;
         return ! ( t4 && t5 );
     }
 }
@@ -263,7 +273,7 @@ bool in_cone(vidx_t im1, vidx_t ip1, vidx_t prev_node[], vidx_t next_node[], coo
 
     Output, int DIAGONALIE, the value of the test.
 */
-bool diagonalie(vidx_t im1, vidx_t ip1, vidx_t next_node[], coord_t x[], coord_t y[])
+bool diagonalie(vidx_t im1, vidx_t ip1, vidx_t next_node[], const coord_seq_t* cs)
 {
     vidx_t first = im1;
     vidx_t j = first;
@@ -279,7 +289,15 @@ bool diagonalie(vidx_t im1, vidx_t ip1, vidx_t next_node[], coord_t x[], coord_t
         if ( j == im1 || j == ip1 || jp1 == im1 || jp1 == ip1 ) {
         }
         else {
-            if (intersects(x[im1], y[im1], x[ip1], y[ip1], x[j], y[j], x[jp1], y[jp1])) {
+            __auto_type x_im1 = coord_seq_getx(cs, im1);
+            __auto_type y_im1 = coord_seq_gety(cs, im1);
+            __auto_type x_ip1 = coord_seq_getx(cs, ip1);
+            __auto_type y_ip1 = coord_seq_gety(cs, ip1);
+            __auto_type x_j = coord_seq_getx(cs, j);
+            __auto_type y_j = coord_seq_gety(cs, j);
+            __auto_type x_jp1 = coord_seq_getx(cs, jp1);
+            __auto_type y_jp1 = coord_seq_gety(cs, jp1);
+            if (intersects(x_im1, y_im1, x_ip1, y_ip1, x_j, y_j, x_jp1, y_jp1)) {
                 return false;
             }
         }
@@ -320,11 +338,11 @@ bool diagonalie(vidx_t im1, vidx_t ip1, vidx_t next_node[], coord_t x[], coord_t
 
     Output, int DIAGONAL, the value of the test.
 */
-bool diagonal(vidx_t im1, vidx_t ip1, vidx_t prev_node[], vidx_t next_node[], coord_t x[], coord_t y[])
+bool diagonal(vidx_t im1, vidx_t ip1, vidx_t prev_node[], vidx_t next_node[], const coord_seq_t* cs)
 {
-    bool value1 = in_cone(im1, ip1, prev_node, next_node, x, y);
-    bool value2 = in_cone(ip1, im1, prev_node, next_node, x, y);
-    bool value3 = diagonalie(im1, ip1, next_node, x, y);
+    bool value1 = in_cone(im1, ip1, prev_node, next_node, cs);
+    bool value2 = in_cone(ip1, im1, prev_node, next_node, cs);
+    bool value3 = diagonalie(im1, ip1, next_node, cs);
 
     return ( value1 && value2 && value3 );
 }
@@ -379,7 +397,8 @@ bool l4_xor(bool l1, bool l2)
     Input, double XA, YA, XB, YB, XC, YC, XD, YD, the X and Y coordinates of the four vertices.
     Output, int INTERSECT_PROP, the result of the test.
 */
-bool intersect_prop(coord_t xa, coord_t ya, coord_t xb, coord_t yb, coord_t xc, coord_t yc, coord_t xd, coord_t yd)
+bool intersect_prop(const coord_t xa, const coord_t ya, const coord_t xb, const coord_t yb,
+                    const coord_t xc, const coord_t yc, const coord_t xd, const coord_t yd)
 {
     if ( collinear ( xa, ya, xb, yb, xc, yc ) ) {
         return false;
@@ -435,8 +454,8 @@ bool intersect_prop(coord_t xa, coord_t ya, coord_t xb, coord_t yb, coord_t xc, 
 
     Output, int INTERSECT, the value of the test.
 */
-bool intersects(coord_t xa, coord_t ya, coord_t xb, coord_t yb,
-                coord_t xc, coord_t yc, coord_t xd, coord_t yd)
+bool intersects(const coord_t xa, const coord_t ya, const coord_t xb, const coord_t yb,
+                const coord_t xc, const coord_t yc, const coord_t xd, const coord_t yd)
 {
     if ( intersect_prop ( xa, ya, xb, yb, xc, yc, xd, yd ) ) {
         return true;
@@ -478,11 +497,15 @@ bool intersects(coord_t xa, coord_t ya, coord_t xb, coord_t yb,
     Input, double X[N], Y[N], the vertex coordinates.
     Output, double POLYGON_AREA, the area of the polygon.
 */
-coord_t polygon_area(uint32_t n, coord_t x[n], coord_t y[n])
+coord_t polygon_area(const coord_seq_t* cs)
 {
     coord_t area = (__typeof__(area))0;
-    for (vidx_t i = 0, im1 = n - 1; i < n; i++ ) {
-        area += x[im1] * y[i] - x[i] * y[im1];
+    for (vidx_t i = 0, im1 = cs->n - 1; i < cs->n; i++ ) {
+        __auto_type x_im1 = coord_seq_getx(cs, im1);
+        __auto_type y_im1 = coord_seq_gety(cs, im1);
+        __auto_type x_i = coord_seq_getx(cs, i);
+        __auto_type y_i = coord_seq_gety(cs, i);
+        area += x_im1 * y_i - x_i * y_im1;
         im1 = i;
     }
     area = 0.5 * area;
@@ -527,39 +550,39 @@ coord_t polygon_area(uint32_t n, coord_t x[n], coord_t y[n])
     Output, int TRIANGLES[3*(N-2)], the triangles of the triangulation.
 */
 #define angle_tol 5.7E-05
-vidx_t *polygon_triangulate(const uint32_t n, coord_t x[n], coord_t y[n])
+vidx_t *polygon_triangulate(const coord_seq_t* cs)
 {
-
+    const vidx_t n = cs->n;
     // We must have at least 3 vertices.
     if (n < 3) {
         ERR("POLYGON_TRIANGULATE - Fatal error!  N < 3." );
         return NULL;
     }
     // Consecutive vertices cannot be equal.
-    for (vidx_t current = 0, prev = n-1; current < n; current++ ) {
-        if ( x[prev] == x[current] && y[prev] == y[current] ) {
+    for (vidx_t curt = 0, prev = n-1; curt < n; curt++ ) {
+        if ( coord_seq_getx(cs, prev) == coord_seq_getx(cs, curt) && coord_seq_gety(cs, prev) == coord_seq_gety(cs, curt) ) {
           ERR("POLYGON_TRIANGULATE - Fatal error!  Two consecutive nodes are identical." );
           return NULL;
         }
-        prev = current;
+        prev = curt;
     }
     // No node can be the vertex of an angle less than 1 degree 
     // in absolute value.
-    for (vidx_t current = 0, prev = n-1; current < n; current++ ) {
-        vidx_t next = ( ( current + 1 ) % n ); 
+    for (vidx_t curt = 0, prev = n-1; curt < n; curt++ ) {
+        vidx_t next = ( ( curt + 1 ) % n ); 
 
-        __auto_type angle = angle_degree(x[prev], y[prev], 
-                                         x[current], y[current], 
-                                         x[next], y[next] );
+        __auto_type angle = angle_degree(coord_seq_getx(cs, prev), coord_seq_gety(cs, prev), 
+                                         coord_seq_getx(cs, curt), coord_seq_gety(cs, curt), 
+                                         coord_seq_getx(cs, next), coord_seq_gety(cs, next) );
 
         if ( THE_ABS( angle ) <= angle_tol ) {
-            ERR("POLYGON_TRIANGULATE - Fatal error! Polygon has an angle smaller than %g, accurring at node %d", angle_tol, current);
+            ERR("POLYGON_TRIANGULATE - Fatal error! Polygon has an angle smaller than %g, accurring at node %d", angle_tol, curt);
             return NULL;
         }
-        prev = current;
+        prev = curt;
     }
     // Area must be positive.
-    if (polygon_area(n, x, y) <= 0.0) {
+    if (polygon_area(cs) <= 0.0) {
         ERR("POLYGON_TRIANGULATE - Fatal error!  Polygon has zero or negative area." );
         return NULL;
     }
@@ -579,10 +602,10 @@ vidx_t *polygon_triangulate(const uint32_t n, coord_t x[n], coord_t y[n])
     // that can be sliced off immediately.
     bool* ear = (__typeof__(ear)) malloc ( n * sizeof ( *ear ) );
     for (vidx_t i = 0; i < (vidx_t)n; i++ ) {
-        ear[i] = diagonal(prev_node[i], next_node[i], prev_node, next_node, x, y);
+        ear[i] = diagonal(prev_node[i], next_node[i], prev_node, next_node, cs);
     }
 
-    uint32_t triangle_idx = 0;
+    vidx_t triangle_idx = 0;
 
     vidx_t i0;
     vidx_t i1;
@@ -603,8 +626,8 @@ vidx_t *polygon_triangulate(const uint32_t n, coord_t x[n], coord_t y[n])
             next_node[i1] = i3;
             prev_node[i3] = i1;
             // Update the earity of I1 and I3, because I2 disappeared.
-            ear[i1] = diagonal ( i0, i3, prev_node, next_node, x, y );
-            ear[i3] = diagonal ( i1, i4, prev_node, next_node, x, y );
+            ear[i1] = diagonal ( i0, i3, prev_node, next_node, cs);
+            ear[i3] = diagonal ( i1, i4, prev_node, next_node, cs);
             // Add the diagonal [I3, I1, I2] to the list.
             triangles[0+triangle_idx*3] = i3;
             triangles[1+triangle_idx*3] = i1;

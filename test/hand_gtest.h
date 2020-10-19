@@ -1,4 +1,5 @@
-#include "../src/mylog.h"
+#include "mylog.h"
+
 #include "polygon_triangulate.h"
 
 #include "greatest.h"

@@ -2,13 +2,12 @@
 #define POLY2TRI_INCLUDE_GEOMETRY_TYPE_H
 
 #ifndef MYIDEF
-#ifdef MY_GEOM_TYPE_STATIC
-#define MYIDEF static
-#else
 #define MYIDEF extern
-#endif
+#else
+#define MYIDEF
 #endif
 
+# include <math.h>
 #include <stdbool.h>
 #include <inttypes.h>
 #include <stdalign.h>
@@ -21,6 +20,10 @@ typedef uint32_t vidx_t;
 typedef float coord_t;
 typedef uint16_t vidx_t;
 #endif
+
+#define THE_MIN(a, b) ((a) < (b) ? (a) : (b))
+#define THE_MAX(a, b) ((a) > (b) ? (a) : (b))
+#define THE_ABS(expr) ((expr) >= (__typeof__(expr))0 ? (expr) : -(expr))
 
 typedef struct coord_seq_t {
     vidx_t n;
@@ -175,10 +178,6 @@ MYIDEF coord_t angle_degree(const coord_t x1, const coord_t y1, const coord_t x2
         return 180.0 * value / r8_pi;
     }
 }
-
-#define THE_MIN(a, b) ((a) < (b) ? (a) : (b))
-#define THE_MAX(a, b) ((a) > (b) ? (a) : (b))
-#define THE_ABS(expr) ((expr) >= (__typeof__(expr))0 ? (expr) : -(expr))
 
 /**
   Purpose:
@@ -411,7 +410,6 @@ MYIDEF bool intersects(const coord_t xa, const coord_t ya, const coord_t xb, con
         return false;
     }
 }
-
 
 
 #endif // GEOM_TYPE_IMPLEMENTATION

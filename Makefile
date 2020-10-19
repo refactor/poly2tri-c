@@ -19,11 +19,8 @@ HEADERS = $(wildcard include/*.h)
 test: all_gtest.run
 	./$<
 
-%_gtest.run: test/%_gtest.c ${TEST_HEADERS} ${DATA_HEADERS} ${OBJS}
+%_gtest.run: test/%_gtest.c test/poly2tri_impl.c ${TEST_HEADERS} ${DATA_HEADERS} ${OBJS}
 	$(CC) ${CFLAGS} ${HEADER_PATH} -g -o $@ $^ ${LDFLAGS}
-
-src/polygon_triangulate.o: src/polygon_triangulate.c ${HEADERS}
-	${CC} ${CFLAGS} ${HEADER_PATH} -g -o $@ -c $<
 
 clean:
 	-@rm -f test/*.o src/*.o *.run a.out

@@ -16,7 +16,7 @@ TEST only_one(void) {
     coord_t y[] = {1.0, 10.0, 0.0, -10.0};
     DBG("coord_t.sz: %zu", sizeof(coord_t));
     DBG("x.sz: %zu, y.sz: %zu", sizeof(x), sizeof(y));
-    coord_seq_t* cs = allocate_coord_seq(3);
+    polygon_t* cs = allocate_coord_seq(3);
     //memcpy(cs->coord_seq,       x, cs->n * sizeof(coord_t));
     //memcpy(cs->coord_seq+cs->n, y, cs->n * sizeof(coord_t));
     for (uint32_t i=0; i<cs->n; ++i) {
@@ -43,7 +43,7 @@ TEST only_one(void) {
 TEST illegal_one(void) {
     coord_t x[] = {8.0, 7.0, 7.0, 7.0};
     coord_t y[] = {0.0, 10.0, 10.0, -10.0};
-    coord_seq_t* cs = allocate_coord_seq(3);
+    polygon_t* cs = allocate_coord_seq(3);
     for (uint32_t i=0; i<cs->n; ++i) {
         coord_seq_setx(cs, i, x[i]);
         coord_seq_sety(cs, i, y[i]);

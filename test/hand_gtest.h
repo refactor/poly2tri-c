@@ -12,7 +12,7 @@ TEST hand_test(void) {
     const int n = ARR_LEN(x);
     ASSERT_EQ(n, ARR_LEN(y));
     DBG("arr.len: %u", n);
-    coord_seq_t* cs = allocate_coord_seq(n);
+    polygon_t* cs = allocate_coord_seq(n);
     for (uint32_t i=0; i<cs->n; ++i) {
         coord_seq_setx(cs, i, x[i]);
         coord_seq_sety(cs, i, y[i]);

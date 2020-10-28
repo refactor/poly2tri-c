@@ -25,18 +25,19 @@ typedef uint16_t vidx_t;
 #define THE_MAX(a, b) ((a) > (b) ? (a) : (b))
 #define THE_ABS(expr) ((expr) >= (__typeof__(expr))0 ? (expr) : -(expr))
 
-typedef struct coord_seq_t {
+typedef struct polygon_t {
     vidx_t n;
     alignas(8) coord_t vertices[];
-} coord_seq_t;
+} polygon_t;
 
-MYIDEF coord_seq_t* allocate_coord_seq(vidx_t n);
-MYIDEF coord_t coord_seq_getx(const coord_seq_t* cs, vidx_t idx);
-MYIDEF void coord_seq_setx(coord_seq_t* cs, vidx_t idx, coord_t x);
-MYIDEF coord_t coord_seq_gety(const coord_seq_t* cs, vidx_t idx);
-MYIDEF void coord_seq_sety(coord_seq_t* cs, vidx_t idx, coord_t y);
+MYIDEF polygon_t* allocate_coord_seq(vidx_t n);
 
-MYIDEF coord_t polygon_area(const coord_seq_t* cs);
+MYIDEF coord_t coord_seq_getx(const polygon_t* cs, vidx_t idx);
+MYIDEF void coord_seq_setx(polygon_t* cs, vidx_t idx, coord_t x);
+MYIDEF coord_t coord_seq_gety(const polygon_t* cs, vidx_t idx);
+MYIDEF void coord_seq_sety(polygon_t* cs, vidx_t idx, coord_t y);
+
+MYIDEF coord_t polygon_area(const polygon_t* cs);
 MYIDEF coord_t triangle_area(const coord_t xa, const coord_t ya, const coord_t xb, const coord_t yb, const coord_t xc, const coord_t yc);
 
 MYIDEF coord_t angle_degree(const coord_t x1, const coord_t y1, const coord_t x2, const coord_t y2, const coord_t x3, const coord_t y3);
@@ -52,25 +53,25 @@ MYIDEF bool intersects(const coord_t xa, const coord_t ya, const coord_t xb, con
 #define COORD_X_SZ sizeof(coord_t)
 #define COORD_Y_SZ sizeof(coord_t)
 
-MYIDEF coord_seq_t* allocate_coord_seq(vidx_t n) {
-    coord_seq_t *cs = (__typeof__(cs)) aligned_alloc(8, sizeof(*cs) + n * (COORD_X_SZ + COORD_Y_SZ) );
+MYIDEF polygon_t* allocate_coord_seq(vidx_t n) {
+    polygon_t *cs = (__typeof__(cs)) aligned_alloc(8, sizeof(*cs) + n * (COORD_X_SZ + COORD_Y_SZ) );
     cs->n = n;
     return cs;
 }
 
-MYIDEF coord_t coord_seq_getx(const coord_seq_t* cs, vidx_t idx) {
+MYIDEF coord_t coord_seq_getx(const polygon_t* cs, vidx_t idx) {
     return cs->vertices[idx];
 }
 
-MYIDEF void coord_seq_setx(coord_seq_t* cs, vidx_t idx, coord_t x) {
+MYIDEF void coord_seq_setx(polygon_t* cs, vidx_t idx, coord_t x) {
     cs->vertices[idx] = x;
 }
 
-MYIDEF coord_t coord_seq_gety(const coord_seq_t* cs, vidx_t idx) {
+MYIDEF coord_t coord_seq_gety(const polygon_t* cs, vidx_t idx) {
     return cs->vertices[cs->n  + idx];
 }
 
-MYIDEF void coord_seq_sety(coord_seq_t* cs, vidx_t idx, coord_t y) {
+MYIDEF void coord_seq_sety(polygon_t* cs, vidx_t idx, coord_t y) {
     cs->vertices[cs->n + idx] = y;
 }
 
@@ -93,7 +94,7 @@ MYIDEF void coord_seq_sety(coord_seq_t* cs, vidx_t idx, coord_t y) {
     Input, double X[N], Y[N], the vertex coordinates.
     Output, double POLYGON_AREA, the area of the polygon.
 */
-MYIDEF coord_t polygon_area(const coord_seq_t* cs)
+MYIDEF coord_t polygon_area(const polygon_t* cs)
 {
     coord_t area = (__typeof__(area))0;
     for (vidx_t i = 0, im1 = cs->n - 1; i < cs->n; i++ ) {
@@ -112,6 +113,8 @@ MYIDEF coord_t polygon_area(const coord_seq_t* cs)
 /**
   Purpose:
     TRIANGLE_AREA computes the signed area of a triangle.
+    The signed area of a triangle is just the area of a triangle, if the vertices are listed counterclockwise,
+    or negative of that area, if the vertices are listed clockwise.
 
   Modified:
     05 May 2014

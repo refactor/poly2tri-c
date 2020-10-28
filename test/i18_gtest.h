@@ -13,7 +13,7 @@ TEST i18_test(void) {
 
     int n = ARR_LEN(x);
     DBG("arr.len: %u", n);
-    coord_seq_t* cs = allocate_coord_seq(n);
+    polygon_t* cs = allocate_coord_seq(n);
     for (uint32_t i=0; i<cs->n; ++i) {
         coord_seq_setx(cs, i, x[i]);
         coord_seq_sety(cs, i, y[i]);

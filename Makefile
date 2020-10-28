@@ -23,4 +23,4 @@ test: all_gtest.run
 	$(CC) ${CFLAGS} ${HEADER_PATH} -g -o $@ $^ ${LDFLAGS}
 
 clean:
-	-@rm -f test/*.o src/*.o *.run a.out
+	-@rm -f test/*.o src/*.o *.run *.d a.out

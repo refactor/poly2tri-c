@@ -13,12 +13,16 @@
 #include <stdalign.h>
 #include <stdlib.h>
 
-#ifdef USING_DOUBLE
+#ifdef USING_DOUBLE_COORD
 typedef double coord_t;
-typedef uint32_t vidx_t;
 #else
 typedef float coord_t;
-typedef uint16_t vidx_t;
+#endif
+
+#ifdef USING_INT32_INDEX
+typedef int32_t vidx_t;
+#else
+typedef int16_t vidx_t;
 #endif
 
 #define THE_MIN(a, b) ((a) < (b) ? (a) : (b))
@@ -30,6 +34,12 @@ typedef struct polygon_t {
     alignas(8) coord_t vertices[];
 } polygon_t;
 
+typedef struct triangles_t {
+    vidx_t m;
+    alignas(8) vidx_t vidx[];
+} triangles_t;
+
+MYIDEF triangles_t* allocate_triangles(vidx_t m);
 MYIDEF polygon_t* allocate_coord_seq(vidx_t n);
 
 MYIDEF coord_t coord_seq_getx(const polygon_t* cs, vidx_t idx);
@@ -37,7 +47,7 @@ MYIDEF void coord_seq_setx(polygon_t* cs, vidx_t idx, coord_t x);
 MYIDEF coord_t coord_seq_gety(const polygon_t* cs, vidx_t idx);
 MYIDEF void coord_seq_sety(polygon_t* cs, vidx_t idx, coord_t y);
 
-MYIDEF coord_t polygon_area(const polygon_t* cs);
+MYIDEF coord_t signed_area(const polygon_t* cs);
 MYIDEF coord_t triangle_area(const coord_t xa, const coord_t ya, const coord_t xb, const coord_t yb, const coord_t xc, const coord_t yc);
 
 MYIDEF coord_t angle_degree(const coord_t x1, const coord_t y1, const coord_t x2, const coord_t y2, const coord_t x3, const coord_t y3);
@@ -52,6 +62,13 @@ MYIDEF bool intersects(const coord_t xa, const coord_t ya, const coord_t xb, con
 
 #define COORD_X_SZ sizeof(coord_t)
 #define COORD_Y_SZ sizeof(coord_t)
+
+MYIDEF triangles_t* allocate_triangles(vidx_t m) {
+    triangles_t* triangles =
+        (__typeof__(triangles)) aligned_alloc(8, sizeof(*triangles) + m * 3 * sizeof(vidx_t));
+    triangles->m = m;
+    return triangles;
+}
 
 MYIDEF polygon_t* allocate_coord_seq(vidx_t n) {
     polygon_t *cs = (__typeof__(cs)) aligned_alloc(8, sizeof(*cs) + n * (COORD_X_SZ + COORD_Y_SZ) );
@@ -94,18 +111,19 @@ MYIDEF void coord_seq_sety(polygon_t* cs, vidx_t idx, coord_t y) {
     Input, double X[N], Y[N], the vertex coordinates.
     Output, double POLYGON_AREA, the area of the polygon.
 */
-MYIDEF coord_t polygon_area(const polygon_t* cs)
+MYIDEF coord_t signed_area(const polygon_t* cs)
 {
     coord_t area = (__typeof__(area))0;
-    for (vidx_t i = 0, im1 = cs->n - 1; i < cs->n; i++ ) {
-        __auto_type x_im1 = coord_seq_getx(cs, im1);
-        __auto_type y_im1 = coord_seq_gety(cs, im1);
+    for (vidx_t i = 0, j = cs->n - 1; i < cs->n; i++ ) {
+        __auto_type x_j = coord_seq_getx(cs, j);
+        __auto_type y_j = coord_seq_gety(cs, j);
         __auto_type x_i = coord_seq_getx(cs, i);
         __auto_type y_i = coord_seq_gety(cs, i);
-        area += x_im1 * y_i - x_i * y_im1;
-        im1 = i;
+        area += (x_j - x_i) * (y_i + y_j);
+//        area += x_j * y_i - x_i * y_j;
+        j = i;
     }
-    area = 0.5 * area;
+    //area = 0.5 * area; // it doesn't mater
 
     return area;
 }
@@ -130,7 +148,7 @@ MYIDEF coord_t polygon_area(const polygon_t* cs)
 */
 MYIDEF coord_t triangle_area(const coord_t xa, const coord_t ya, const coord_t xb, const coord_t yb, const coord_t xc, const coord_t yc)
 {
-    return 0.5 * ( 
+    return /*0.5 * */( 
           ( xb - xa ) * ( yc - ya ) 
         - ( xc - xa ) * ( yb - ya ) );
 }

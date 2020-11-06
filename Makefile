@@ -1,26 +1,45 @@
 .PHONY: clean test
 
-CFLAGS += -std=c11
-CFLAGS += -Wall -Werror -Wextra
+override CFLAGS = -std=c11
+override CFLAGS += -Wall -Werror -Wextra
+override CFLAGS += -O2 -g
+
 LDFLAGS += -lm
 
 CC = gcc
 
-HEADER_PATH = -I${PWD}/include -I/usr/include
+ifeq (0,${MAKELEVEL})
+ProjDir := $(shell pwd)
+export ProjDir
+endif
+
+HEADER_INC = -I${PWD}/include
+TEST_INC = -I${PWD}/tdep
 
 SRC = $(wildcard src/*.c)
 OBJS = $(SRC:%.c=%.o)
-TEST_HEADERS = $(wildcard test/*_gtest.h)
-DATA_HEADERS = $(wildcard test/*_data.h)
-HEADERS = $(wildcard include/*.h)
 
-#CFLAGS += -DUSING_DOUBLE
+## default coord_t: float
+#override CFLAGS += -DUSING_DOUBLE_COORD
 
-test: all_gtest.run
-	./$<
+## default index_t: int16_t
+#override CFLAGS += -DUSING_INT32_INDEX
 
-%_gtest.run: test/%_gtest.c test/poly2tri_impl.c ${TEST_HEADERS} ${DATA_HEADERS} ${OBJS}
-	$(CC) ${CFLAGS} ${HEADER_PATH} -g -o $@ $^ ${LDFLAGS}
+export HEADER_INC
+export TEST_INC
+
+export CFLAGS
+export LDFLAGS
+
+test:
+	cd test && $(MAKE) test
+	
 
 clean:
-	-@rm -f test/*.o src/*.o *.run *.d a.out
+	-@rm -f *.o src/*.o *.run *.d a.out
+	cd test && $(MAKE) clean
+
+
+pnt:
+	-@echo "proj-dir: $(ProjDir)"
+	cd test && $(MAKE) pnt

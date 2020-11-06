@@ -17,22 +17,21 @@ TEST only_one(void) {
     DBG("coord_t.sz: %zu", sizeof(coord_t));
     DBG("x.sz: %zu, y.sz: %zu", sizeof(x), sizeof(y));
     polygon_t* cs = allocate_coord_seq(3);
-    //memcpy(cs->coord_seq,       x, cs->n * sizeof(coord_t));
-    //memcpy(cs->coord_seq+cs->n, y, cs->n * sizeof(coord_t));
-    for (uint32_t i=0; i<cs->n; ++i) {
+    for (__auto_type i=0; i<cs->n; ++i) {
         coord_seq_setx(cs, i, x[i]);
         coord_seq_sety(cs, i, y[i]);
     }
 
     DBG("cs->n: %u", cs->n);
-    for (uint32_t i=0; i<cs->n; ++i) DBG("x[%u] = %f, y[%u] = %f", i, coord_seq_getx(cs, i),i,coord_seq_gety(cs,i));
-    vidx_t* triangles = polygon_triangulate(cs);
-//    i4mat_transpose_print(3, n-2, (int*)triangles, "Only One Triangle");
+    //reverse_polygon(cs);  // cannot do clockwise-polygon, DONOT do this
+    print_polygon(cs);
+    triangles_t* triangles = polygon_triangulate(cs);
+    ASSERTm("MUST BE counterclockwise-polygon", triangles != NULL);
 
     boxed_triangle expected_triangles[] = {
         {.tri = {1,2,0}},
     };
-    ASSERT_EQUAL_T(&expected_triangles, triangles, &boxed_triangle_type_info, NULL);
+    ASSERT_EQUAL_T(&expected_triangles, triangles->vidx, &boxed_triangle_type_info, NULL);
 
     free(triangles);
 
@@ -41,28 +40,59 @@ TEST only_one(void) {
 
 //*
 TEST illegal_one(void) {
-    coord_t x[] = {8.0, 7.0, 7.0, 7.0};
-    coord_t y[] = {0.0, 10.0, 10.0, -10.0};
+    //coord_t x[] = {8.0, 7.0, 7.0, 7.0};
+    //coord_t y[] = {0.0, 10.0, 10.0, -10.0};
+    coord_t x[] = {7.0, 7.0, 7.0, 8.0};
+    coord_t y[] = {-10.0, 10.0, 10.0, 0.0};
     polygon_t* cs = allocate_coord_seq(3);
-    for (uint32_t i=0; i<cs->n; ++i) {
+    for (__auto_type i=0; i<cs->n; ++i) {
         coord_seq_setx(cs, i, x[i]);
         coord_seq_sety(cs, i, y[i]);
     }
-    vidx_t* triangles = polygon_triangulate(cs);
+    triangles_t* triangles = polygon_triangulate(cs);
     ASSERT_EQ(NULL, triangles);
     
     PASS();
 }
 // */
+
+TEST common_one(void) {
+    //coord_t x[] = {10.0, 0.0, 60.0, 70.0};
+    //coord_t y[] = {0.0, 50.0, 60.0, 10.0};
+    coord_t x[] = {70.0, 60.0, 0.0, 10.0};
+    coord_t y[] = {10.0, 60.0, 50.0, 0.0};
+    polygon_t* cs = allocate_coord_seq(ARR_LEN(x));
+    DBG("cs->n = %d", cs->n);
+    for (__auto_type i=0; i<cs->n; ++i) {
+        coord_seq_setx(cs, i, x[i]);
+        coord_seq_sety(cs, i, y[i]);
+    }
+    print_polygon(cs);
+    //reverse_polygon(cs);
+   // print_polygon(cs);
+    triangles_t* triangles = polygon_triangulate(cs);
+    ASSERT(NULL != triangles);
+    boxed_triangle expected_triangles[] = {
+        {.tri = {1,3,0}},
+        {.tri = {1,2,3}},
+    };
+    ASSERT_EQUAL_T(&expected_triangles, triangles->vidx, &boxed_triangle_type_info, NULL);
+    (void)expected_triangles;
+
+    free(triangles);
+    PASS();
+}
 SUITE(simple_suite) {
     RUN_TEST(only_one);
     RUN_TEST(illegal_one);
+
+    RUN_TEST(common_one);
 }
 
 GREATEST_MAIN_DEFS();
 
 int main(int argc, char* argv[]) {
-    INFO("vidx_t.sz: %zu, coord_t.sz: %zu", sizeof(vidx_t), sizeof(coord_t));
+    WARN("vidx_t.sz: %zu bytes, coord_t.sz: %zu bytes", sizeof(vidx_t), sizeof(coord_t));
 
     GREATEST_MAIN_BEGIN();
 

@@ -11,7 +11,7 @@
 #endif
 #include "geometry_type.h"
 
-vidx_t *polygon_triangulate(const polygon_t* cs);
+triangles_t *polygon_triangulate(const polygon_t* cs);
 
 #endif // POLY2TRI_INCLUDE_H
 
@@ -213,13 +213,13 @@ bool diagonal(vidx_t im1, vidx_t ip1, vidx_t prev_node[], vidx_t next_node[], co
     LC: QA448.D38.
 
   Parameters:
-    Input, int N, the number of vertices.
+    Input, int N, the number of vertices. MUST BE counter-clockwise
     Input, double X[N], Y[N], the coordinates of each vertex.
 
     Output, int TRIANGLES[3*(N-2)], the triangles of the triangulation.
 */
 #define angle_tol 5.7E-05
-MYIDEF vidx_t *polygon_triangulate(const polygon_t* cs)
+MYIDEF triangles_t *polygon_triangulate(const polygon_t* cs)
 {
     const vidx_t n = cs->n;
     // We must have at least 3 vertices.
@@ -251,12 +251,12 @@ MYIDEF vidx_t *polygon_triangulate(const polygon_t* cs)
         prev = curt;
     }
     // Area must be positive.
-    if (polygon_area(cs) <= 0.0) {
+    if (signed_area(cs) <= 0.0) {
         ERR("POLYGON_TRIANGULATE - Fatal error!  Polygon has zero or negative area." );
         return NULL;
     }
 
-    vidx_t* triangles = (__typeof__(triangles)) malloc ( 3 * ( n - 2 ) * sizeof ( *triangles ) );
+    triangles_t* triangles = allocate_triangles(n - 2);
 
     // PREV_NODE and NEXT_NODE point to the previous and next nodes.
     vidx_t* prev_node = (__typeof__(prev_node)) malloc ( n * sizeof ( *prev_node ) );
@@ -298,9 +298,9 @@ MYIDEF vidx_t *polygon_triangulate(const polygon_t* cs)
             ear[i1] = diagonal ( i0, i3, prev_node, next_node, cs);
             ear[i3] = diagonal ( i1, i4, prev_node, next_node, cs);
             // Add the diagonal [I3, I1, I2] to the list.
-            triangles[0+triangle_idx*3] = i3;
-            triangles[1+triangle_idx*3] = i1;
-            triangles[2+triangle_idx*3] = i2;
+            triangles->vidx[0+triangle_idx*3] = i3;
+            triangles->vidx[1+triangle_idx*3] = i1;
+            triangles->vidx[2+triangle_idx*3] = i2;
             ++triangle_idx;
         }
         // Try the next vertex.
@@ -310,14 +310,15 @@ MYIDEF vidx_t *polygon_triangulate(const polygon_t* cs)
     i3 = next_node[i2];
     i1 = prev_node[i2];
 
-    triangles[0+triangle_idx*3] = i3;
-    triangles[1+triangle_idx*3] = i1;
-    triangles[2+triangle_idx*3] = i2;
+    triangles->vidx[0+triangle_idx*3] = i3;
+    triangles->vidx[1+triangle_idx*3] = i1;
+    triangles->vidx[2+triangle_idx*3] = i2;
 
     free ( ear );
     free ( next_node );
     free ( prev_node );
 
+    triangles->m = n - 2;
     return triangles;
 }
 

@@ -71,3 +71,24 @@ int triangle_cmp(const void *d1, const void *d2) {
 void sort_triangles(int num, boxed_triangle triangles[num]) {
     qsort(triangles, num, sizeof(boxed_triangle), triangle_cmp);
 }
+
+void reverse_polygon(polygon_t* poly) {
+    for (int i = 0; i < poly->n / 2; ++i) {
+        coord_t tx = coord_seq_getx(poly, i);
+        coord_t ty = coord_seq_gety(poly, i);
+
+        coord_seq_setx(poly, i, coord_seq_getx(poly, poly->n - 1 - i));
+        coord_seq_sety(poly, i, coord_seq_gety(poly, poly->n - 1 - i));
+
+        coord_seq_setx(poly, poly->n - 1 - i, tx);
+        coord_seq_sety(poly, poly->n - 1 - i, ty);
+    }
+}
+
+void print_polygon(polygon_t* poly) {
+    printf("polygon n=%d\n\t", poly->n);
+    for (int i=0; i<poly->n; ++i) {
+        printf("%d:[%g,%g], ", i, coord_seq_getx(poly, i), coord_seq_gety(poly, i));
+    }
+    printf("\n");
+}

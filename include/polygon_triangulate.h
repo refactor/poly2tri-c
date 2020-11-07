@@ -318,7 +318,7 @@ MYIDEF triangles_t *polygon_triangulate(const polygon_t* cs)
     free ( next_node );
     free ( prev_node );
 
-    triangles->m = n - 2;
+    triangles->m = triangle_idx + 1;
     return triangles;
 }
 

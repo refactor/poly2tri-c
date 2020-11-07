@@ -1,8 +1,8 @@
-.PHONY: clean test
+.PHONY: clean test etest
 
 override CFLAGS = -std=c11
 override CFLAGS += -Wall -Werror -Wextra
-override CFLAGS += -O2 -g
+#override CFLAGS += -g
 
 LDFLAGS += -lm
 
@@ -34,10 +34,13 @@ export LDFLAGS
 test:
 	cd test && $(MAKE) test
 	
+etest:
+	cd earcut_test && $(MAKE) test
 
 clean:
 	-@rm -f *.o src/*.o *.run *.d a.out
 	cd test && $(MAKE) clean
+	cd earcut_test && $(MAKE) clean
 
 
 pnt:

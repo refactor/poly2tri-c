@@ -66,7 +66,7 @@ MYIDEF bool intersects(const coord_t xa, const coord_t ya, const coord_t xb, con
 MYIDEF triangles_t* allocate_triangles(vidx_t m) {
     triangles_t* triangles =
         (__typeof__(triangles)) aligned_alloc(8, sizeof(*triangles) + m * 3 * sizeof(vidx_t));
-    triangles->m = m;
+    triangles->m = 0;
     return triangles;
 }
 

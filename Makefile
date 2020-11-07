@@ -14,7 +14,7 @@ export ProjDir
 endif
 
 HEADER_INC = -I${PWD}/include
-TEST_INC = -I${PWD}/tdep
+TEST_INC = -I${PWD}/test/include
 
 SRC = $(wildcard src/*.c)
 OBJS = $(SRC:%.c=%.o)
@@ -31,16 +31,16 @@ export TEST_INC
 export CFLAGS
 export LDFLAGS
 
-test:
-	cd test && $(MAKE) test
+btest:
+	cd test/jburkardt_test && $(MAKE) test
 	
 etest:
-	cd earcut_test && $(MAKE) test
+	cd test/earcut_test && $(MAKE) test
 
 clean:
 	-@rm -f *.o src/*.o *.run *.d a.out
-	cd test && $(MAKE) clean
-	cd earcut_test && $(MAKE) clean
+	cd test/jburkardt_test && $(MAKE) clean
+	cd test/earcut_test && $(MAKE) clean
 
 
 pnt:

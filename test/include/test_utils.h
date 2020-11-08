@@ -92,3 +92,11 @@ void print_polygon(polygon_t* poly) {
     }
     printf("\n");
 }
+
+void print_triangles(triangles_t* triangles) {
+    printf("triangles #%d\n", triangles->m);
+    for (int i=0; i<triangles->m; ++i) {
+        printf("\t%d:{%d, %d, %d}\n", i, triangles->vidx[3*i], triangles->vidx[3*i+1], triangles->vidx[3*i+2]);
+    }
+    printf("\n");
+}

@@ -14,7 +14,7 @@ export ProjDir
 endif
 
 HEADER_INC = -I${PWD}/include
-TEST_INC = -I${PWD}/test/include
+TEST_INC = -I${PWD}/test/include -I${PWD}/test/data
 
 SRC = $(wildcard src/*.c)
 OBJS = $(SRC:%.c=%.o)

@@ -30,6 +30,8 @@ node_t* allocate_node(vidx_t i, coord_t x, coord_t y) {
         .i = i,
         .x = x,
         .y = y,
+        .z = -1,
+        .steiner = false,
     };
     return p;
 }
@@ -399,9 +401,9 @@ node_t* cureLocalIntersections(node_t* start, triangles_t* triangles) {
 
         if (!equals(a, b) && seg_intersects(a, p, p->next, b) && locallyInside(a, b) && locallyInside(b, a)) {
             vidx_t m = triangles->m;
-            triangles->vidx[m+0] = a->i;
-            triangles->vidx[m+1] = p->i;
-            triangles->vidx[m+2] = b->i;
+            triangles->vidx[3*m+0] = a->i;
+            triangles->vidx[3*m+1] = p->i;
+            triangles->vidx[3*m+2] = b->i;
             triangles->m = m + 1;
 
             // remove two nodes involved
@@ -474,7 +476,7 @@ void splitEarcut(node_t* start, triangles_t* triangles, coord_t minX, coord_t mi
 
 // main ear slicing loop which triangulates a polygon (given as a linked list)
 void earcutLinked(node_t* ear, triangles_t* triangles, coord_t minX, coord_t minY, coord_t invSize, int pass) {
-    (void)triangles;
+
     if (NULL == ear) return;
 
     // interlink polygon nodes in z-order
@@ -490,9 +492,9 @@ void earcutLinked(node_t* ear, triangles_t* triangles, coord_t minX, coord_t min
         if (invSize != 0 ? isEarHashed(ear, minX, minY, invSize) : isEar(ear)) {
             // cut off the triangle
             vidx_t m = triangles->m;
-            triangles->vidx[m+0] = prev->i;
-            triangles->vidx[m+1] = ear->i;
-            triangles->vidx[m+2] = next->i;
+            triangles->vidx[3*m+0] = prev->i;
+            triangles->vidx[3*m+1] = ear->i;
+            triangles->vidx[3*m+2] = next->i;
             triangles->m = m + 1;
 
             removeNode(ear);

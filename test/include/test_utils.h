@@ -99,7 +99,8 @@ coord_t diff_areas(polygon_t polygon, triangles_t* triangles) {
         areas += triangle_area(ax,ay, bx,by, cx,cy);
     }
     DBG("signed_area: %g, triangles-areas: %g", darea, areas);
-    return fabs(darea-areas);
+    __auto_type diff = darea - areas;
+    return THE_ABS(diff);
 }
 
 void print_polygon(polygon_t poly) {

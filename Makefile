@@ -34,15 +34,15 @@ export LDFLAGS
 test: btest etest
 
 btest:
-	cd test/jburkardt_test && $(MAKE) test
+	@cd test/jburkardt_test && $(MAKE) test
 	
 etest:
-	cd test/earcut_test && $(MAKE) test
+	@cd test/earcut_test && $(MAKE) test
 
 clean:
-	-@rm -f *.o src/*.o *.run *.d a.out
-	cd test/jburkardt_test && $(MAKE) clean
-	cd test/earcut_test && $(MAKE) clean
+	-@rm -f *.o src/*.o *.run *.d a.out 2> /dev/null ||true
+	@$(MAKE) -C test/jburkardt_test clean
+	@$(MAKE) -C test/earcut_test clean
 
 
 pnt:

@@ -12,7 +12,7 @@ test: all_gtest.run
 	./$< -v | ${ProjDir}/test/contrib/greenest
 
 clean:
-	-@rm -f *.o *.run
+	-@rm -f *.o *.run 2> /dev/null ||true
 
 pnt:
 	-@echo "HEADER_INC: ${HEADER_INC}"

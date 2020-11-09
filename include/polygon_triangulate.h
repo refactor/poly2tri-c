@@ -11,7 +11,7 @@
 #endif
 #include "geometry_type.h"
 
-triangles_t *polygon_triangulate(const polygon_t* cs);
+triangles_t *polygon_triangulate(const polygon_t cs);
 
 #endif // POLY2TRI_INCLUDE_H
 
@@ -57,7 +57,7 @@ triangles_t *polygon_triangulate(const polygon_t* cs);
 
     Output, int DIAGONALIE, the value of the test.
 */
-static bool diagonalie(vidx_t im1, vidx_t ip1, vidx_t next_node[], const polygon_t* cs)
+static bool diagonalie(vidx_t im1, vidx_t ip1, vidx_t next_node[], const polygon_t cs)
 {
     vidx_t first = im1;
     vidx_t j = first;
@@ -121,7 +121,7 @@ static bool diagonalie(vidx_t im1, vidx_t ip1, vidx_t next_node[], const polygon
 
     Output, int IN_CONE, the value of the test.
 */
-static bool in_cone(vidx_t im1, vidx_t ip1, vidx_t prev_node[], vidx_t next_node[], const polygon_t* cs)
+static bool in_cone(vidx_t im1, vidx_t ip1, vidx_t prev_node[], vidx_t next_node[], const polygon_t cs)
 {
     __auto_type im2 = prev_node[im1];
     __auto_type i   = next_node[im1];
@@ -173,7 +173,7 @@ static bool in_cone(vidx_t im1, vidx_t ip1, vidx_t prev_node[], vidx_t next_node
 
     Output, int DIAGONAL, the value of the test.
 */
-bool diagonal(vidx_t im1, vidx_t ip1, vidx_t prev_node[], vidx_t next_node[], const polygon_t* cs)
+bool diagonal(vidx_t im1, vidx_t ip1, vidx_t prev_node[], vidx_t next_node[], const polygon_t cs)
 {
     bool value1 = in_cone(im1, ip1, prev_node, next_node, cs);
     bool value2 = in_cone(ip1, im1, prev_node, next_node, cs);
@@ -219,7 +219,7 @@ bool diagonal(vidx_t im1, vidx_t ip1, vidx_t prev_node[], vidx_t next_node[], co
     Output, int TRIANGLES[3*(N-2)], the triangles of the triangulation.
 */
 #define angle_tol 5.7E-05
-MYIDEF triangles_t *polygon_triangulate(const polygon_t* cs)
+MYIDEF triangles_t *polygon_triangulate(const polygon_t cs)
 {
     const vidx_t n = cs->n;
     // We must have at least 3 vertices.

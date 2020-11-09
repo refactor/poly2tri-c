@@ -29,25 +29,24 @@ typedef int16_t vidx_t;
 #define THE_MAX(a, b) ((a) > (b) ? (a) : (b))
 #define THE_ABS(expr) ((expr) >= (__typeof__(expr))0 ? (expr) : -(expr))
 
-typedef struct polygon_t {
-    vidx_t n;
-    alignas(8) coord_t vertices[];
-} polygon_t;
+typedef struct polygon_s * polygon_t;
 
-typedef struct triangles_t {
+typedef struct triangles_s {
     vidx_t m;
     alignas(8) vidx_t vidx[];
 } triangles_t;
 
 MYIDEF triangles_t* allocate_triangles(vidx_t m);
-MYIDEF polygon_t* allocate_polygon(vidx_t n);
+MYIDEF polygon_t allocate_polygon(vidx_t n);
+MYIDEF void free_polygon(polygon_t poly);
 
-MYIDEF coord_t coord_seq_getx(const polygon_t* cs, vidx_t idx);
-MYIDEF void coord_seq_setx(polygon_t* cs, vidx_t idx, coord_t x);
-MYIDEF coord_t coord_seq_gety(const polygon_t* cs, vidx_t idx);
-MYIDEF void coord_seq_sety(polygon_t* cs, vidx_t idx, coord_t y);
+MYIDEF vidx_t vertices_num(const polygon_t poly);
+MYIDEF coord_t coord_seq_getx(const polygon_t cs, vidx_t idx);
+MYIDEF void coord_seq_setx(polygon_t cs, vidx_t idx, coord_t x);
+MYIDEF coord_t coord_seq_gety(const polygon_t cs, vidx_t idx);
+MYIDEF void coord_seq_sety(polygon_t cs, vidx_t idx, coord_t y);
 
-MYIDEF coord_t signed_area(const polygon_t* cs);
+MYIDEF coord_t signed_area(const polygon_t cs);
 MYIDEF coord_t triangle_area(const coord_t xa, const coord_t ya, const coord_t xb, const coord_t yb, const coord_t xc, const coord_t yc);
 
 MYIDEF coord_t angle_degree(const coord_t x1, const coord_t y1, const coord_t x2, const coord_t y2, const coord_t x3, const coord_t y3);
@@ -63,6 +62,11 @@ MYIDEF bool intersects(const coord_t xa, const coord_t ya, const coord_t xb, con
 #define COORD_X_SZ sizeof(coord_t)
 #define COORD_Y_SZ sizeof(coord_t)
 
+struct polygon_s {
+    vidx_t n;
+    alignas(8) coord_t vertices[];
+};
+
 MYIDEF triangles_t* allocate_triangles(vidx_t m) {
     triangles_t* triangles =
         (__typeof__(triangles)) aligned_alloc(8, sizeof(*triangles) + m * 3 * sizeof(vidx_t));
@@ -70,25 +74,33 @@ MYIDEF triangles_t* allocate_triangles(vidx_t m) {
     return triangles;
 }
 
-MYIDEF polygon_t* allocate_polygon(vidx_t n) {
-    polygon_t *cs = (__typeof__(cs)) aligned_alloc(8, sizeof(*cs) + n * (COORD_X_SZ + COORD_Y_SZ) );
+MYIDEF polygon_t allocate_polygon(vidx_t n) {
+    polygon_t cs = (__typeof__(cs)) aligned_alloc(8, sizeof(*cs) + n * (COORD_X_SZ + COORD_Y_SZ) );
     cs->n = n;
     return cs;
 }
 
-MYIDEF coord_t coord_seq_getx(const polygon_t* cs, vidx_t idx) {
+MYIDEF void free_polygon(polygon_t poly) {
+    free(poly);
+}
+
+MYIDEF vidx_t vertices_num(const polygon_t poly) {
+    return poly->n;
+}
+
+MYIDEF coord_t coord_seq_getx(const polygon_t cs, vidx_t idx) {
     return cs->vertices[idx];
 }
 
-MYIDEF void coord_seq_setx(polygon_t* cs, vidx_t idx, coord_t x) {
+MYIDEF void coord_seq_setx(polygon_t cs, vidx_t idx, coord_t x) {
     cs->vertices[idx] = x;
 }
 
-MYIDEF coord_t coord_seq_gety(const polygon_t* cs, vidx_t idx) {
+MYIDEF coord_t coord_seq_gety(const polygon_t cs, vidx_t idx) {
     return cs->vertices[cs->n  + idx];
 }
 
-MYIDEF void coord_seq_sety(polygon_t* cs, vidx_t idx, coord_t y) {
+MYIDEF void coord_seq_sety(polygon_t cs, vidx_t idx, coord_t y) {
     cs->vertices[cs->n + idx] = y;
 }
 
@@ -111,7 +123,7 @@ MYIDEF void coord_seq_sety(polygon_t* cs, vidx_t idx, coord_t y) {
     Input, double X[N], Y[N], the vertex coordinates.
     Output, double POLYGON_AREA, the area of the polygon.
 */
-MYIDEF coord_t signed_area(const polygon_t* cs)
+MYIDEF coord_t signed_area(const polygon_t cs)
 {
     coord_t area = (__typeof__(area))0;
     for (vidx_t i = 0, j = cs->n - 1; i < cs->n; i++ ) {

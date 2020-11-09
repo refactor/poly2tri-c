@@ -11,18 +11,20 @@ TEST i18_test(void) {
     printf("tri.sz: %zu\n", sizeof(expected_triangles));
     ASSERT_EQ(ARR_LEN(x), ARR_LEN(y));
 
-    int n = ARR_LEN(x);
+    const int n = ARR_LEN(x);
     DBG("arr.len: %u", n);
-    polygon_t* polygon = allocate_polygon(n);
-    for (__auto_type i=0; i<polygon->n; ++i) {
+    polygon_t polygon = allocate_polygon(n);
+    for (__auto_type i=0; i<n; ++i) {
         coord_seq_setx(polygon, i, x[i]);
         coord_seq_sety(polygon, i, y[i]);
     }
-    print_polygon(polygon);
+    ASSERT_EQ(n, vertices_num(polygon));
+//    print_polygon(polygon);
 //    reverse_polygon(polygon);
 //    print_polygon(polygon);
     triangles_t* triangles = polygon_triangulate(polygon);
     ASSERT(triangles != NULL);
+    ASSERT_EQ(n-2, triangles->m);
 
     ASSERT( diff_areas(polygon, triangles) < 0.00001);
     
@@ -37,6 +39,7 @@ TEST i18_test(void) {
         ASSERT_EQUAL_T(&etris[i], &btris[i], &boxed_triangle_type_info, NULL);
 
     free(triangles);
+    free_polygon(polygon);
     PASS();
 }
 

@@ -6,7 +6,7 @@
 #endif
 #include "geometry_type.h"
 
-triangles_t *polygon_earcut(const polygon_t* polygon, int32_t num, const polygon_t* holes[num]);
+triangles_t *polygon_earcut(const polygon_t polygon, int32_t num, const polygon_t holes[num]);
 
 #endif // POLYGON_EARCUT_H
 
@@ -65,7 +65,7 @@ void removeNode(node_t *p) {
     if (p->nextZ != NULL) p->nextZ->prevZ = p->prevZ;
 }
 
-node_t* linkedList(const polygon_t* polygon, vidx_t start, vidx_t end, bool counterclockwise) {
+node_t* linkedList(const polygon_t polygon, vidx_t start, vidx_t end, bool counterclockwise) {
     node_t* last = NULL;
     if (counterclockwise == (signed_area(polygon) > 0)) {
         for (vidx_t i = start; i < end; ++i) {
@@ -532,7 +532,7 @@ void earcutLinked(node_t* ear, triangles_t* triangles, coord_t minX, coord_t min
     }
 }
 
-MYIDEF triangles_t *polygon_earcut(const polygon_t* polygon, int32_t num, const polygon_t* holes[num]) {
+MYIDEF triangles_t *polygon_earcut(const polygon_t polygon, int32_t num, const polygon_t holes[num]) {
     (void)holes;
     vidx_t outerLen = polygon->n;  // TODO: do holes
     node_t* outerNode = linkedList(polygon, 0, outerLen, true);

@@ -72,20 +72,21 @@ void sort_triangles(int num, boxed_triangle triangles[num]) {
     qsort(triangles, num, sizeof(boxed_triangle), triangle_cmp);
 }
 
-void reverse_polygon(polygon_t* poly) {
-    for (int i = 0; i < poly->n / 2; ++i) {
+void reverse_polygon(polygon_t poly) {
+    vidx_t vnum = vertices_num(poly);
+    for (int i = 0; i < vnum / 2; ++i) {
         coord_t tx = coord_seq_getx(poly, i);
         coord_t ty = coord_seq_gety(poly, i);
 
-        coord_seq_setx(poly, i, coord_seq_getx(poly, poly->n - 1 - i));
-        coord_seq_sety(poly, i, coord_seq_gety(poly, poly->n - 1 - i));
+        coord_seq_setx(poly, i, coord_seq_getx(poly, vnum - 1 - i));
+        coord_seq_sety(poly, i, coord_seq_gety(poly, vnum - 1 - i));
 
-        coord_seq_setx(poly, poly->n - 1 - i, tx);
-        coord_seq_sety(poly, poly->n - 1 - i, ty);
+        coord_seq_setx(poly, vnum - 1 - i, tx);
+        coord_seq_sety(poly, vnum - 1 - i, ty);
     }
 }
 
-coord_t diff_areas(polygon_t* polygon, triangles_t* triangles) {
+coord_t diff_areas(polygon_t polygon, triangles_t* triangles) {
     __auto_type darea = signed_area(polygon);
     __typeof__(darea) areas = 0;
     for (__auto_type i = 0; i < triangles->m; ++i) {
@@ -101,9 +102,10 @@ coord_t diff_areas(polygon_t* polygon, triangles_t* triangles) {
     return fabs(darea-areas);
 }
 
-void print_polygon(polygon_t* poly) {
-    printf("polygon n=%d\n\t", poly->n);
-    for (int i=0; i<poly->n; ++i) {
+void print_polygon(polygon_t poly) {
+    vidx_t vnum = vertices_num(poly);
+    printf("polygon n=%d\n\t", vnum);
+    for (int i=0; i<vnum; ++i) {
         printf("%d:[%g,%g], ", i, coord_seq_getx(poly, i), coord_seq_gety(poly, i));
     }
     printf("\n");

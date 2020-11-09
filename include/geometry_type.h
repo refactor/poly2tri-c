@@ -63,7 +63,10 @@ MYIDEF bool intersects(const coord_t xa, const coord_t ya, const coord_t xb, con
 #define COORD_Y_SZ sizeof(coord_t)
 
 struct polygon_s {
-    vidx_t n;
+    union {
+        const vidx_t n;
+        vidx_t N;
+    };
     alignas(8) coord_t vertices[];
 };
 
@@ -76,7 +79,7 @@ MYIDEF triangles_t* allocate_triangles(vidx_t m) {
 
 MYIDEF polygon_t allocate_polygon(vidx_t n) {
     polygon_t cs = (__typeof__(cs)) aligned_alloc(8, sizeof(*cs) + n * (COORD_X_SZ + COORD_Y_SZ) );
-    cs->n = n;
+    cs->N = n;
     return cs;
 }
 

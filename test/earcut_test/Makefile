@@ -9,7 +9,7 @@ CFLAGS += ${HEADER_INC} ${TEST_INC}
 	$(CC) ${CFLAGS} -g -O0 -o $@ $^ ${LDFLAGS}
 
 test: all_gtest.run
-	./$<
+	./$< -v | ${ProjDir}/test/contrib/greenest
 
 clean:
 	-@rm -f *.o *.run

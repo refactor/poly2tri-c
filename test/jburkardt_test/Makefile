@@ -10,7 +10,7 @@ CFLAGS += ${HEADER_INC} ${TEST_INC}
 
 test: all_gtest.run
 	@echo "TEST_INC: ${TEST_INC}" 
-	./$<
+	./$< -v | ${ProjDir}/test/contrib/greenest
 
 clean:
 	-@rm -f *.o *.run

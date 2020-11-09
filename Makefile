@@ -31,6 +31,8 @@ export TEST_INC
 export CFLAGS
 export LDFLAGS
 
+test: btest etest
+
 btest:
 	cd test/jburkardt_test && $(MAKE) test
 	

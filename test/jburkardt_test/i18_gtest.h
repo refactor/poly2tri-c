@@ -13,16 +13,19 @@ TEST i18_test(void) {
 
     int n = ARR_LEN(x);
     DBG("arr.len: %u", n);
-    polygon_t* cs = allocate_coord_seq(n);
-    for (__auto_type i=0; i<cs->n; ++i) {
-        coord_seq_setx(cs, i, x[i]);
-        coord_seq_sety(cs, i, y[i]);
+    polygon_t* polygon = allocate_polygon(n);
+    for (__auto_type i=0; i<polygon->n; ++i) {
+        coord_seq_setx(polygon, i, x[i]);
+        coord_seq_sety(polygon, i, y[i]);
     }
-    print_polygon(cs);
-//    reverse_polygon(cs);
-//    print_polygon(cs);
-    triangles_t* triangles = polygon_triangulate(cs);
+    print_polygon(polygon);
+//    reverse_polygon(polygon);
+//    print_polygon(polygon);
+    triangles_t* triangles = polygon_triangulate(polygon);
     ASSERT(triangles != NULL);
+
+    ASSERT( diff_areas(polygon, triangles) < 0.00001);
+    
     const int tri_num = n - 2;
 //    i4mat_transpose_print(3, tri_num, (int*)triangles, "Gotcha Triangles");
 

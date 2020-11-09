@@ -40,7 +40,7 @@ typedef struct triangles_t {
 } triangles_t;
 
 MYIDEF triangles_t* allocate_triangles(vidx_t m);
-MYIDEF polygon_t* allocate_coord_seq(vidx_t n);
+MYIDEF polygon_t* allocate_polygon(vidx_t n);
 
 MYIDEF coord_t coord_seq_getx(const polygon_t* cs, vidx_t idx);
 MYIDEF void coord_seq_setx(polygon_t* cs, vidx_t idx, coord_t x);
@@ -70,7 +70,7 @@ MYIDEF triangles_t* allocate_triangles(vidx_t m) {
     return triangles;
 }
 
-MYIDEF polygon_t* allocate_coord_seq(vidx_t n) {
+MYIDEF polygon_t* allocate_polygon(vidx_t n) {
     polygon_t *cs = (__typeof__(cs)) aligned_alloc(8, sizeof(*cs) + n * (COORD_X_SZ + COORD_Y_SZ) );
     cs->n = n;
     return cs;
@@ -146,11 +146,11 @@ MYIDEF coord_t signed_area(const polygon_t* cs)
 
     Output, double TRIANGLE_AREA, the signed area of the triangle.
 */
-MYIDEF coord_t triangle_area(const coord_t xa, const coord_t ya, const coord_t xb, const coord_t yb, const coord_t xc, const coord_t yc)
+MYIDEF coord_t triangle_area(const coord_t ax, const coord_t ay, const coord_t bx, const coord_t by, const coord_t cx, const coord_t cy)
 {
     return /*0.5 * */( 
-          ( xb - xa ) * ( yc - ya ) 
-        - ( xc - xa ) * ( yb - ya ) );
+          ( bx - ax ) * ( cy - ay ) 
+        - ( cx - ax ) * ( by - ay ) );
 }
 
 #define THE_ATAN2(y,x) _Generic((y), float:atan2f(y,x), double:atan2(y,x))
@@ -236,18 +236,18 @@ MYIDEF coord_t angle_degree(const coord_t x1, const coord_t y1, const coord_t x2
     to be collinear.
 */
 #define r8_eps 2.220446049250313E-016
-static bool collinear(const coord_t xa, const coord_t ya, const coord_t xb, const coord_t yb, const coord_t xc, const coord_t yc)
+static bool collinear(const coord_t ax, const coord_t ay, const coord_t bx, const coord_t by, const coord_t cx, const coord_t cy)
 {
-    __auto_type side_ab_sq = (xa - xb) * (xa - xb) + (ya - yb) * (ya - yb);
-    __auto_type side_bc_sq = (xb - xc) * (xb - xc) + (yb - yc) * (yb - yc);
-    __auto_type side_ca_sq = (xc - xa) * (xc - xa) + (yc - ya) * (yc - ya);
+    __auto_type side_ab_sq = (ax - bx) * (ax - bx) + (ay - by) * (ay - by);
+    __auto_type side_bc_sq = (bx - cx) * (bx - cx) + (by - cy) * (by - cy);
+    __auto_type side_ca_sq = (cx - ax) * (cx - ax) + (cy - ay) * (cy - ay);
 
     __auto_type side_max_sq = THE_MAX(side_ab_sq, THE_MAX(side_bc_sq, side_ca_sq));
 
     if ( side_max_sq <= r8_eps ) {
         return true;
     }
-    else if ( 2.0 * THE_ABS(triangle_area(xa, ya, xb, yb, xc, yc)) <= r8_eps * side_max_sq) {
+    else if ( 2.0 * THE_ABS(triangle_area(ax, ay, bx, by, cx, cy)) <= r8_eps * side_max_sq) {
         return true;
     }
 
@@ -284,21 +284,21 @@ static bool collinear(const coord_t xa, const coord_t ya, const coord_t xb, cons
 
     Output, int BETWEEN, is TRUE if C is between A and B.
 */
-MYIDEF bool between(const coord_t xa, const coord_t ya, const coord_t xb, const coord_t yb, const coord_t xc, const coord_t yc)
+MYIDEF bool between(const coord_t ax, const coord_t ay, const coord_t bx, const coord_t by, const coord_t cx, const coord_t cy)
 {
-    if ( ! collinear( xa, ya, xb, yb, xc, yc ) ) {
+    if ( ! collinear( ax, ay, bx, by, cx, cy ) ) {
         return false;
     }
 
-    if ( THE_ABS ( ya - yb ) < THE_ABS ( xa - xb ) ) {
-        __auto_type xmax = THE_MAX ( xa, xb );
-        __auto_type xmin = THE_MIN ( xa, xb );
-        return ( xmin <= xc && xc <= xmax );
+    if ( THE_ABS ( ay - by ) < THE_ABS ( ax - bx ) ) {
+        __auto_type xmax = THE_MAX ( ax, bx );
+        __auto_type xmin = THE_MIN ( ax, bx );
+        return ( xmin <= cx && cx <= xmax );
     }
     else {
-        __auto_type ymax = THE_MAX ( ya, yb );
-        __auto_type ymin = THE_MAX ( ya, yb );
-        return ( ymin <= yc && yc <= ymax );
+        __auto_type ymax = THE_MAX ( ay, by );
+        __auto_type ymin = THE_MAX ( ay, by );
+        return ( ymin <= cy && cy <= ymax );
     }
 }
 
@@ -352,26 +352,26 @@ static bool l4_xor(bool l1, bool l2)
     Input, double XA, YA, XB, YB, XC, YC, XD, YD, the X and Y coordinates of the four vertices.
     Output, int INTERSECT_PROP, the result of the test.
 */
-static bool intersect_prop(const coord_t xa, const coord_t ya, const coord_t xb, const coord_t yb,
-                    const coord_t xc, const coord_t yc, const coord_t xd, const coord_t yd)
+static bool intersect_prop(const coord_t ax, const coord_t ay, const coord_t bx, const coord_t by,
+                           const coord_t cx, const coord_t cy, const coord_t dx, const coord_t dy)
 {
-    if ( collinear ( xa, ya, xb, yb, xc, yc ) ) {
+    if ( collinear ( ax, ay, bx, by, cx, cy ) ) {
         return false;
     }
-    else if ( collinear ( xa, ya, xb, yb, xd, yd ) ) {
+    else if ( collinear ( ax, ay, bx, by, dx, dy ) ) {
         return false;
     }
-    else if ( collinear ( xc, yc, xd, yd, xa, ya ) ) {
+    else if ( collinear ( cx, cy, dx, dy, ax, ay ) ) {
         return false;
     }
-    else if ( collinear ( xc, yc, xd, yd, xb, yb ) ) {
+    else if ( collinear ( cx, cy, dx, dy, bx, by ) ) {
         return false;
     }
     else {
-        __auto_type t1 = triangle_area ( xa, ya, xb, yb, xc, yc );
-        __auto_type t2 = triangle_area ( xa, ya, xb, yb, xd, yd );
-        __auto_type t3 = triangle_area ( xc, yc, xd, yd, xa, ya );
-        __auto_type t4 = triangle_area ( xc, yc, xd, yd, xb, yb );
+        __auto_type t1 = triangle_area ( ax, ay, bx, by, cx, cy );
+        __auto_type t2 = triangle_area ( ax, ay, bx, by, dx, dy );
+        __auto_type t3 = triangle_area ( cx, cy, dx, dy, ax, ay );
+        __auto_type t4 = triangle_area ( cx, cy, dx, dy, bx, by );
 
         bool value1 = ( 0.0 < t1 );
         bool value2 = ( 0.0 < t2 );
@@ -409,22 +409,22 @@ static bool intersect_prop(const coord_t xa, const coord_t ya, const coord_t xb,
 
     Output, int INTERSECT, the value of the test.
 */
-MYIDEF bool intersects(const coord_t xa, const coord_t ya, const coord_t xb, const coord_t yb,
-                       const coord_t xc, const coord_t yc, const coord_t xd, const coord_t yd)
+MYIDEF bool intersects(const coord_t ax, const coord_t ay, const coord_t bx, const coord_t by,
+                       const coord_t cx, const coord_t cy, const coord_t dx, const coord_t dy)
 {
-    if ( intersect_prop ( xa, ya, xb, yb, xc, yc, xd, yd ) ) {
+    if ( intersect_prop ( ax, ay, bx, by, cx, cy, dx, dy ) ) {
         return true;
     }
-    else if ( between( xa, ya, xb, yb, xc, yc ) ) {
+    else if ( between( ax, ay, bx, by, cx, cy ) ) {
         return true;
     }
-    else if ( between( xa, ya, xb, yb, xd, yd ) ) {
+    else if ( between( ax, ay, bx, by, dx, dy ) ) {
         return true;
     }
-    else if ( between ( xc, yc, xd, yd, xa, ya ) ) {
+    else if ( between ( cx, cy, dx, dy, ax, ay ) ) {
         return true;
     }
-    else if ( between ( xc, yc, xd, yd, xb, yb ) ) {
+    else if ( between ( cx, cy, dx, dy, bx, by ) ) {
         return true;
     }
     else {

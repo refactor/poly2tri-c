@@ -211,8 +211,8 @@ int sign(coord_t num) {
  * clockwise: area > 0;
  * couter-clockwise: area < 0
  */
-float area(node_t *p, node_t *q, node_t *r) {
-    return (q->y - p->y) * (r->x - q->x) - (q->x - p->x) * (r->y - q->y);
+float area(node_t *a, node_t *b, node_t *c) {
+    return (b->y - a->y) * (c->x - b->x) - (b->x - a->x) * (c->y - b->y);
 }
 
 // for collinear points p, q, r, check if point q lies on segment pr

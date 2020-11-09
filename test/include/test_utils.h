@@ -85,6 +85,22 @@ void reverse_polygon(polygon_t* poly) {
     }
 }
 
+coord_t diff_areas(polygon_t* polygon, triangles_t* triangles) {
+    __auto_type darea = signed_area(polygon);
+    __typeof__(darea) areas = 0;
+    for (__auto_type i = 0; i < triangles->m; ++i) {
+        coord_t ax = coord_seq_getx(polygon, triangles->vidx[i * 3 + 0]);
+        coord_t ay = coord_seq_gety(polygon, triangles->vidx[i * 3 + 0]);
+        coord_t bx = coord_seq_getx(polygon, triangles->vidx[i * 3 + 1]);
+        coord_t by = coord_seq_gety(polygon, triangles->vidx[i * 3 + 1]);
+        coord_t cx = coord_seq_getx(polygon, triangles->vidx[i * 3 + 2]);
+        coord_t cy = coord_seq_gety(polygon, triangles->vidx[i * 3 + 2]);
+        areas += triangle_area(ax,ay, bx,by, cx,cy);
+    }
+    DBG("signed_area: %g, triangles-areas: %g", darea, areas);
+    return fabs(darea-areas);
+}
+
 void print_polygon(polygon_t* poly) {
     printf("polygon n=%d\n\t", poly->n);
     for (int i=0; i<poly->n; ++i) {

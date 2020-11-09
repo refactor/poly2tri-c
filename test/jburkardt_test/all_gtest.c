@@ -16,22 +16,24 @@ TEST only_one(void) {
     coord_t y[] = {1.0, 10.0, 0.0, -10.0};
     DBG("coord_t.sz: %zu", sizeof(coord_t));
     DBG("x.sz: %zu, y.sz: %zu", sizeof(x), sizeof(y));
-    polygon_t* cs = allocate_coord_seq(3);
-    for (__auto_type i=0; i<cs->n; ++i) {
-        coord_seq_setx(cs, i, x[i]);
-        coord_seq_sety(cs, i, y[i]);
+    polygon_t* polygon = allocate_polygon(3);
+    for (__auto_type i=0; i<polygon->n; ++i) {
+        coord_seq_setx(polygon, i, x[i]);
+        coord_seq_sety(polygon, i, y[i]);
     }
 
-    DBG("cs->n: %u", cs->n);
-    //reverse_polygon(cs);  // cannot do clockwise-polygon, DONOT do this
-    print_polygon(cs);
-    triangles_t* triangles = polygon_triangulate(cs);
+    DBG("polygon->n: %u", polygon->n);
+    //reverse_polygon(polygon);  // cannot do clockwise-polygon, DONOT do this
+    print_polygon(polygon);
+    triangles_t* triangles = polygon_triangulate(polygon);
     ASSERTm("MUST BE counterclockwise-polygon", triangles != NULL);
 
     boxed_triangle expected_triangles[] = {
         {.tri = {1,2,0}},
     };
     ASSERT_EQUAL_T(&expected_triangles, triangles->vidx, &boxed_triangle_type_info, NULL);
+
+    ASSERT( diff_areas(polygon, triangles) < 0.00001);
 
     free(triangles);
 
@@ -44,7 +46,7 @@ TEST illegal_one(void) {
     //coord_t y[] = {0.0, 10.0, 10.0, -10.0};
     coord_t x[] = {7.0, 7.0, 7.0, 8.0};
     coord_t y[] = {-10.0, 10.0, 10.0, 0.0};
-    polygon_t* cs = allocate_coord_seq(3);
+    polygon_t* cs = allocate_polygon(3);
     for (__auto_type i=0; i<cs->n; ++i) {
         coord_seq_setx(cs, i, x[i]);
         coord_seq_sety(cs, i, y[i]);
@@ -61,23 +63,23 @@ TEST common_one(void) {
     //coord_t y[] = {0.0, 50.0, 60.0, 10.0};
     coord_t x[] = {70.0, 60.0, 0.0, 10.0};
     coord_t y[] = {10.0, 60.0, 50.0, 0.0};
-    polygon_t* cs = allocate_coord_seq(ARR_LEN(x));
-    DBG("cs->n = %d", cs->n);
-    for (__auto_type i=0; i<cs->n; ++i) {
-        coord_seq_setx(cs, i, x[i]);
-        coord_seq_sety(cs, i, y[i]);
+    polygon_t* polygon = allocate_polygon(ARR_LEN(x));
+    DBG("polygon->n = %d", polygon->n);
+    for (__auto_type i=0; i<polygon->n; ++i) {
+        coord_seq_setx(polygon, i, x[i]);
+        coord_seq_sety(polygon, i, y[i]);
     }
-    print_polygon(cs);
-    //reverse_polygon(cs);
-   // print_polygon(cs);
-    triangles_t* triangles = polygon_triangulate(cs);
+    print_polygon(polygon);
+    //reverse_polygon(polygon);
+   // print_polygon(polygon);
+    triangles_t* triangles = polygon_triangulate(polygon);
     ASSERT(NULL != triangles);
     boxed_triangle expected_triangles[] = {
         {.tri = {1,3,0}},
         {.tri = {1,2,3}},
     };
     ASSERT_EQUAL_T(&expected_triangles, triangles->vidx, &boxed_triangle_type_info, NULL);
-    (void)expected_triangles;
+    ASSERT( diff_areas(polygon, triangles) < 0.00001);
 
     free(triangles);
     PASS();

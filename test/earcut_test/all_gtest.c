@@ -12,11 +12,11 @@ SUITE(unit_tests) {
 }
 
 TEST ccw_test1(void) {
-    // counter-clockwise
+    // a counter-clockwise polygon
     coord_t xs[] = {70, 60, 0, 10};
     coord_t ys[] = {10, 60, 50, 0};
     int n = ARR_LEN(xs);
-    polygon_t* polygon = allocate_coord_seq(n);
+    polygon_t* polygon = allocate_polygon(n);
     for (int i=0; i<n; ++i) {
         coord_seq_setx(polygon, i, xs[i]);
         coord_seq_sety(polygon, i, ys[i]);
@@ -33,16 +33,18 @@ TEST ccw_test1(void) {
     };
     ASSERT_EQUAL_T(&expected_triangles, triangles->vidx, &boxed_triangle_type_info, NULL);
 
+    ASSERT( diff_areas(polygon, triangles) < 0.00001);
+
     free(triangles);
     PASS();
 }
 
 TEST cw_test2(void) {
-    // clockwise
+    // a clockwise ploygon
     coord_t xs[] = {10,0,60,70};
     coord_t ys[] = {0,50,60,10};
     int n = ARR_LEN(xs);
-    polygon_t* polygon = allocate_coord_seq(n);
+    polygon_t* polygon = allocate_polygon(n);
     for (int i=0; i<n; ++i) {
         coord_seq_setx(polygon, i, xs[i]);
         coord_seq_sety(polygon, i, ys[i]);
@@ -56,6 +58,8 @@ TEST cw_test2(void) {
     };
     ASSERT_EQUAL_T(&expected_triangles, triangles->vidx, &boxed_triangle_type_info, NULL);
 
+    //ASSERT( diff_areas(polygon, triangles) < 0.00001);
+
     free(triangles);
     PASS();
 }
@@ -65,7 +69,7 @@ TEST cw_test3(void) {
     coord_t xs[] = {3,5,12,9,5};
     coord_t ys[] = {4,11,8,5,6};
     int n = ARR_LEN(xs);
-    polygon_t* polygon = allocate_coord_seq(n);
+    polygon_t* polygon = allocate_polygon(n);
     for (int i=0; i<n; ++i) {
         coord_seq_setx(polygon, i, xs[i]);
         coord_seq_sety(polygon, i, ys[i]);
@@ -80,6 +84,8 @@ TEST cw_test3(void) {
     };
     ASSERT_EQUAL_T(&expected_triangles, triangles->vidx, &boxed_triangle_type_info, NULL);
 
+    //ASSERT( diff_areas(polygon, triangles) < 0.00001);
+
     free(triangles);
     PASS();
 }
@@ -93,7 +99,7 @@ SUITE(earcut_tests) {
 TEST i18_test(void) {
 #include "i18_data.h"
     int n = ARR_LEN(x);
-    polygon_t* polygon = allocate_coord_seq(n);
+    polygon_t* polygon = allocate_polygon(n);
     for (int i=0; i<n; ++i) {
         coord_seq_setx(polygon, i, x[i]);
         coord_seq_sety(polygon, i, y[i]);
@@ -104,6 +110,7 @@ TEST i18_test(void) {
 
     print_triangles(triangles);
     ASSERT_EQUAL_T(expected_triangles, triangles->vidx, &boxed_triangle_type_info, NULL);
+    ASSERT( diff_areas(polygon, triangles) < 0.00001);
 
     PASS();
 }
@@ -111,7 +118,7 @@ TEST i18_test(void) {
 TEST comb_test(void) {
 #include "comb_data.h"
     int n = ARR_LEN(x);
-    polygon_t* polygon = allocate_coord_seq(n);
+    polygon_t* polygon = allocate_polygon(n);
     for (int i=0; i<n; ++i) {
         coord_seq_setx(polygon, i, x[i]);
         coord_seq_sety(polygon, i, y[i]);
@@ -122,6 +129,7 @@ TEST comb_test(void) {
 
     print_triangles(triangles);
     ASSERT_EQUAL_T(expected_triangles, triangles->vidx, &boxed_triangle_type_info, NULL);
+    ASSERT( diff_areas(polygon, triangles) < 0.00001);
 
     PASS();
 }
@@ -129,7 +137,7 @@ TEST comb_test(void) {
 TEST hand_test(void) {
 #include "hand_data.h"
     int n = ARR_LEN(x);
-    polygon_t* polygon = allocate_coord_seq(n);
+    polygon_t* polygon = allocate_polygon(n);
     for (int i=0; i<n; ++i) {
         coord_seq_setx(polygon, i, x[i]);
         coord_seq_sety(polygon, i, y[i]);
@@ -144,6 +152,7 @@ vidx_t expected_triangles[] = {
 
     print_triangles(triangles);
     ASSERT_EQUAL_T(expected_triangles, triangles->vidx, &boxed_triangle_type_info, NULL);
+    ASSERT( diff_areas(polygon, triangles) < 0.00001);
 
     PASS();
 }

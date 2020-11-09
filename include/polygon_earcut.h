@@ -6,7 +6,7 @@
 #endif
 #include "geometry_type.h"
 
-triangles_t *polygon_earcut(const polygon_t polygon, int32_t num, const polygon_t holes[num]);
+triangles_t polygon_earcut(const polygon_t polygon, int32_t num, const polygon_t holes[num]);
 
 #endif // POLYGON_EARCUT_H
 
@@ -393,18 +393,14 @@ node_t* filterPoints(node_t* start, node_t* end) {
 /**
  * go through all polygon nodes and cure small local self-intersections
  */
-node_t* cureLocalIntersections(node_t* start, triangles_t* triangles) {
+node_t* cureLocalIntersections(node_t* start, triangles_t triangles) {
     node_t* p = start;
     do {
         node_t *a = p->prev,
                *b = p->next->next;
 
         if (!equals(a, b) && seg_intersects(a, p, p->next, b) && locallyInside(a, b) && locallyInside(b, a)) {
-            vidx_t m = triangles->m;
-            triangles->vidx[3*m+0] = a->i;
-            triangles->vidx[3*m+1] = p->i;
-            triangles->vidx[3*m+2] = b->i;
-            triangles->m = m + 1;
+            append_triangle(triangles, a->i, p->i, b->i);
 
             // remove two nodes involved
             removeNode(p);
@@ -444,12 +440,12 @@ node_t* splitPolygon(node_t* a, node_t* b) {
     return b2;
 }
 
-void earcutLinked(node_t* ear, triangles_t* triangles, coord_t minX, coord_t minY, coord_t invSize, int pass);
+void earcutLinked(node_t* ear, triangles_t triangles, coord_t minX, coord_t minY, coord_t invSize, int pass);
 
 /**
  * try splitting polygon into two and triangulate them independently
  */
-void splitEarcut(node_t* start, triangles_t* triangles, coord_t minX, coord_t minY, coord_t invSize) {
+void splitEarcut(node_t* start, triangles_t triangles, coord_t minX, coord_t minY, coord_t invSize) {
     // look for a valid diagonal that divides the polygon into two
     node_t *a = start;
     do {
@@ -475,7 +471,7 @@ void splitEarcut(node_t* start, triangles_t* triangles, coord_t minX, coord_t mi
 }
 
 // main ear slicing loop which triangulates a polygon (given as a linked list)
-void earcutLinked(node_t* ear, triangles_t* triangles, coord_t minX, coord_t minY, coord_t invSize, int pass) {
+void earcutLinked(node_t* ear, triangles_t triangles, coord_t minX, coord_t minY, coord_t invSize, int pass) {
 
     if (NULL == ear) return;
 
@@ -491,11 +487,7 @@ void earcutLinked(node_t* ear, triangles_t* triangles, coord_t minX, coord_t min
 
         if (invSize != 0 ? isEarHashed(ear, minX, minY, invSize) : isEar(ear)) {
             // cut off the triangle
-            vidx_t m = triangles->m;
-            triangles->vidx[3*m+0] = prev->i;
-            triangles->vidx[3*m+1] = ear->i;
-            triangles->vidx[3*m+2] = next->i;
-            triangles->m = m + 1;
+            append_triangle(triangles, prev->i, ear->i, next->i);
 
             removeNode(ear);
             free(ear);
@@ -532,7 +524,7 @@ void earcutLinked(node_t* ear, triangles_t* triangles, coord_t minX, coord_t min
     }
 }
 
-MYIDEF triangles_t *polygon_earcut(const polygon_t polygon, int32_t num, const polygon_t holes[num]) {
+MYIDEF triangles_t polygon_earcut(const polygon_t polygon, int32_t num, const polygon_t holes[num]) {
     (void)holes;
     vidx_t outerLen = polygon->n;  // TODO: do holes
     node_t* outerNode = linkedList(polygon, 0, outerLen, true);
@@ -563,7 +555,7 @@ MYIDEF triangles_t *polygon_earcut(const polygon_t polygon, int32_t num, const p
         invSize = THE_MAX(deltaX, deltaY);
         invSize = invSize != 0 ? 1 / invSize : 0;
     }
-    triangles_t* triangles = allocate_triangles(polygon->n - 2);
+    triangles_t triangles = allocate_triangles(polygon->n - 2);
     earcutLinked(outerNode, triangles, minX, minY, invSize, 0);
     return triangles;
 }

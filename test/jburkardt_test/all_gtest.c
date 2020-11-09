@@ -26,18 +26,20 @@ TEST only_one(void) {
 
     //reverse_polygon(polygon);  // cannot do clockwise-polygon, DONOT do this
     print_polygon(polygon);
-    triangles_t* triangles = polygon_triangulate(polygon);
+    triangles_t triangles = polygon_triangulate(polygon);
     ASSERTm("MUST BE counterclockwise-polygon", triangles != NULL);
-    ASSERT_EQ(n - 2, triangles->m);
+    __auto_type m = triangles_num(triangles);
+    ASSERT_EQ(n - 2, m);
 
     boxed_triangle expected_triangles[] = {
         {.tri = {1,2,0}},
     };
-    ASSERT_EQUAL_T(&expected_triangles, triangles->vidx, &boxed_triangle_type_info, NULL);
+    __auto_type tris = triangles_nth(triangles, 0);
+    ASSERT_EQUAL_T(&expected_triangles, tris, &boxed_triangle_type_info, NULL);
 
     ASSERT( diff_areas(polygon, triangles) < 0.00001);
 
-    free(triangles);
+    free_triangles(triangles);
     free_polygon(polygon);
 
     PASS();
@@ -57,7 +59,7 @@ TEST illegal_one(void) {
     }
     ASSERT_EQ(n, vertices_num(polygon));
 
-    triangles_t* triangles = polygon_triangulate(polygon);
+    triangles_t triangles = polygon_triangulate(polygon);
     ASSERT_EQ(NULL, triangles);
     
     PASS();
@@ -80,18 +82,20 @@ TEST common_one(void) {
     //print_polygon(polygon);
     //reverse_polygon(polygon);
    // print_polygon(polygon);
-    triangles_t* triangles = polygon_triangulate(polygon);
+    triangles_t triangles = polygon_triangulate(polygon);
     ASSERT(NULL != triangles);
-    ASSERT_EQ(n - 2, triangles->m);
+    __auto_type m = triangles_num(triangles);
+    ASSERT_EQ(n - 2, m);
 
     boxed_triangle expected_triangles[] = {
         {.tri = {1,3,0}},
         {.tri = {1,2,3}},
     };
-    ASSERT_EQUAL_T(&expected_triangles, triangles->vidx, &boxed_triangle_type_info, NULL);
+    __auto_type tris = triangles_nth(triangles, 0);
+    ASSERT_EQUAL_T(&expected_triangles, tris, &boxed_triangle_type_info, NULL);
     ASSERT( diff_areas(polygon, triangles) < 0.00001);
 
-    free(triangles);
+    free_triangles(triangles);
     free_polygon(polygon);
     PASS();
 }

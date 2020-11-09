@@ -29,14 +29,17 @@ typedef int16_t vidx_t;
 #define THE_MAX(a, b) ((a) > (b) ? (a) : (b))
 #define THE_ABS(expr) ((expr) >= (__typeof__(expr))0 ? (expr) : -(expr))
 
-typedef struct polygon_s * polygon_t;
+typedef struct polygon_s* polygon_t;
 
-typedef struct triangles_s {
-    vidx_t m;
-    alignas(8) vidx_t vidx[];
-} triangles_t;
+typedef struct triangles_s* triangles_t;
 
-MYIDEF triangles_t* allocate_triangles(vidx_t m);
+MYIDEF triangles_t allocate_triangles(vidx_t m);
+MYIDEF void free_triangles(triangles_t triangles);
+
+MYIDEF vidx_t triangles_num(triangles_t triangles);
+MYIDEF vidx_t* triangles_nth(triangles_t triangles, vidx_t i);
+MYIDEF vidx_t append_triangle(triangles_t triangles, vidx_t a, vidx_t b, vidx_t c);
+
 MYIDEF polygon_t allocate_polygon(vidx_t n);
 MYIDEF void free_polygon(polygon_t poly);
 
@@ -70,11 +73,38 @@ struct polygon_s {
     alignas(8) coord_t vertices[];
 };
 
-MYIDEF triangles_t* allocate_triangles(vidx_t m) {
-    triangles_t* triangles =
+struct triangles_s {
+    vidx_t m;
+    alignas(8) vidx_t vidx[];
+};
+
+MYIDEF triangles_t allocate_triangles(vidx_t m) {
+    triangles_t triangles =
         (__typeof__(triangles)) aligned_alloc(8, sizeof(*triangles) + m * 3 * sizeof(vidx_t));
     triangles->m = 0;
     return triangles;
+}
+
+MYIDEF void free_triangles(triangles_t triangles) {
+    free(triangles);
+}
+
+MYIDEF vidx_t triangles_num(triangles_t triangles) {
+    return triangles->m;
+}
+
+MYIDEF vidx_t* triangles_nth(triangles_t triangles, vidx_t i) {
+    return &triangles->vidx[i * 3];
+}
+
+MYIDEF vidx_t append_triangle(triangles_t triangles, vidx_t a, vidx_t b, vidx_t c) {
+    vidx_t i = triangles->m;
+    __auto_type tri = triangles_nth(triangles, i);
+    tri[0] = a;
+    tri[1] = b;
+    tri[2] = c;
+    triangles->m = i + 1;
+    return triangles->m;
 }
 
 MYIDEF polygon_t allocate_polygon(vidx_t n) {

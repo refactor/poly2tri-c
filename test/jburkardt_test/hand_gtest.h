@@ -79,8 +79,9 @@ TEST hand_test(void) {
     }
     ASSERT_EQ(n, vertices_num(polygon));
 
-    triangles_t* triangles = polygon_triangulate(polygon);
-    ASSERT_EQ(n-2, triangles->m);
+    triangles_t triangles = polygon_triangulate(polygon);
+    __auto_type m = triangles_num(triangles);
+    ASSERT_EQ(n-2, m);
 
     ASSERT( diff_areas(polygon, triangles) < 0.00001);
 
@@ -89,12 +90,13 @@ TEST hand_test(void) {
 
     boxed_triangle* etris = (boxed_triangle*)expected_triangles;
     sort_triangles(tri_num, etris);
-    boxed_triangle* btris = (boxed_triangle*)triangles->vidx;
+    vidx_t* tris = triangles_nth(triangles, 0);
+    boxed_triangle* btris = (boxed_triangle*)tris;
     sort_triangles(tri_num, btris);
     for (int i = 0; i < tri_num; ++i) 
         ASSERT_EQUAL_T(&etris[i], &btris[i], &boxed_triangle_type_info, NULL);
 
-    free(triangles);
+    free_triangles(triangles);
     free_polygon(polygon);
 
     PASS();

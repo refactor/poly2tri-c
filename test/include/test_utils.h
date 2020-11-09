@@ -86,16 +86,18 @@ void reverse_polygon(polygon_t poly) {
     }
 }
 
-coord_t diff_areas(polygon_t polygon, triangles_t* triangles) {
+coord_t diff_areas(polygon_t polygon, triangles_t triangles) {
     __auto_type darea = signed_area(polygon);
     __typeof__(darea) areas = 0;
-    for (__auto_type i = 0; i < triangles->m; ++i) {
-        coord_t ax = coord_seq_getx(polygon, triangles->vidx[i * 3 + 0]);
-        coord_t ay = coord_seq_gety(polygon, triangles->vidx[i * 3 + 0]);
-        coord_t bx = coord_seq_getx(polygon, triangles->vidx[i * 3 + 1]);
-        coord_t by = coord_seq_gety(polygon, triangles->vidx[i * 3 + 1]);
-        coord_t cx = coord_seq_getx(polygon, triangles->vidx[i * 3 + 2]);
-        coord_t cy = coord_seq_gety(polygon, triangles->vidx[i * 3 + 2]);
+    __auto_type m = triangles_num(triangles);
+    for (__auto_type i = 0; i < m; ++i) {
+        vidx_t* tri = triangles_nth(triangles, i);
+        coord_t ax = coord_seq_getx(polygon, tri[0]);
+        coord_t ay = coord_seq_gety(polygon, tri[0]);
+        coord_t bx = coord_seq_getx(polygon, tri[1]);
+        coord_t by = coord_seq_gety(polygon, tri[1]);
+        coord_t cx = coord_seq_getx(polygon, tri[2]);
+        coord_t cy = coord_seq_gety(polygon, tri[2]);
         areas += triangle_area(ax,ay, bx,by, cx,cy);
     }
     DBG("signed_area: %g, triangles-areas: %g", darea, areas);
@@ -112,10 +114,12 @@ void print_polygon(polygon_t poly) {
     printf("\n");
 }
 
-void print_triangles(triangles_t* triangles) {
-    printf("triangles #%d\n", triangles->m);
-    for (int i=0; i<triangles->m; ++i) {
-        printf("\t%d:{%d, %d, %d}\n", i, triangles->vidx[3*i], triangles->vidx[3*i+1], triangles->vidx[3*i+2]);
+void print_triangles(triangles_t triangles) {
+    __auto_type m = triangles_num(triangles);
+    printf("triangles #%d\n", m);
+    for (int i=0; i<m; ++i) {
+        vidx_t* tri = triangles_nth(triangles, i);
+        printf("\t%d:{%d, %d, %d}\n", i, tri[0], tri[1], tri[2]);
     }
     printf("\n");
 }

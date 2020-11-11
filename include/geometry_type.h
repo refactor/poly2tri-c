@@ -7,7 +7,8 @@
 #define MYIDEF
 #endif
 
-# include <math.h>
+#include <float.h>
+#include <math.h>
 #include <stdbool.h>
 #include <inttypes.h>
 #include <stdalign.h>
@@ -28,6 +29,8 @@ typedef int16_t vidx_t;
 #define THE_MIN(a, b) ((a) < (b) ? (a) : (b))
 #define THE_MAX(a, b) ((a) > (b) ? (a) : (b))
 #define THE_ABS(expr) ((expr) >= (__typeof__(expr))0 ? (expr) : -(expr))
+
+#define REAL_MAX_VALUE(x) _Generic((x), float:FLT_MAX, double: DBL_MAX) 
 
 typedef struct polygon_s* polygon_t;
 

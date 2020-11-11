@@ -190,6 +190,40 @@ SUITE(data_tests) {
     RUN_TEST(hand_test);
 }
 
+TEST hole1_test(void) {
+    // counter-clockwise
+    coord_t x[] = {0, 100, 100,   0, 20, 80, 80, 20};
+    coord_t y[] = {0,   0, 100, 100, 20, 20, 80, 80};
+    vidx_t holeIndices[] = {4};
+    const int n = ARR_LEN(x);
+    polygon_t polygon = allocate_polygon(n);
+    for (int i=0; i<n; ++i) {
+        coord_seq_setx(polygon, i, x[i]);
+        coord_seq_sety(polygon, i, y[i]);
+    }
+    ASSERT_EQ(n, vertices_num(polygon));
+
+    triangles_t triangles = polygon_earcut(polygon, ARR_LEN(holeIndices), holeIndices);
+    ASSERT(NULL != triangles);
+    __auto_type m = triangles_num(triangles);
+    int expected_triangle_num = n + ARR_LEN(holeIndices) * 2 - 2;
+    ASSERT_EQ(expected_triangle_num, m); // 
+
+    vidx_t expected_triangles[] = {
+        3,0,4, 5,4,0, 3,4,7, 5,0,1, 2,3,7, 6,5,1, 2,7,6, 6,1,2
+    };
+
+    vidx_t* tri = triangles_nth(triangles, 0);
+    ASSERT_EQUAL_T(expected_triangles, tri, &boxed_triangle_type_info, NULL);
+//    ASSERT( diff_areas(polygon, triangles) < 0.00001);
+
+    PASS();
+}
+
+SUITE(hole_tests) {
+    RUN_TEST(hole1_test);
+}
+
 GREATEST_MAIN_DEFS();
 
 int main(int argc, char* argv[]) {
@@ -200,6 +234,7 @@ int main(int argc, char* argv[]) {
     RUN_SUITE(unit_tests);
     RUN_SUITE(earcut_tests);
     RUN_SUITE(data_tests);
+    RUN_SUITE(hole_tests);
 
     GREATEST_MAIN_END();
 }

@@ -6,7 +6,7 @@
 #endif
 #include "geometry_type.h"
 
-triangles_t polygon_earcut(const polygon_t polygon, int32_t num, const polygon_t holes[num]);
+triangles_t polygon_earcut(const polygon_t polygon, const int32_t num, const vidx_t holes[num]);
 
 #endif // POLYGON_EARCUT_H
 
@@ -524,13 +524,137 @@ void earcutLinked(node_t* ear, triangles_t triangles, coord_t minX, coord_t minY
     }
 }
 
-MYIDEF triangles_t polygon_earcut(const polygon_t polygon, int32_t num, const polygon_t holes[num]) {
-    (void)holes;
-    vidx_t outerLen = polygon->n;  // TODO: do holes
+// find the leftmost node of a polygon ring
+node_t* getLeftmost(node_t* start) {
+    node_t *p = start,
+           *leftmost = start;
+    do {
+        if (p->x < leftmost->x || (p->x == leftmost->x && p->y < leftmost->y)) leftmost = p;
+        p = p->next;
+    } while (p != start);
+
+    return leftmost;
+}
+
+int compareX(const void* a, const void* b) {
+    const node_t* an = (const node_t*)a;
+    const node_t* bn = (const node_t*)b;
+    if (an->x < bn->x) return -1;
+    if (an->x > bn->x) return 1;
+    // TODO: Cannot use floatToRawIntBits because of possibility of NaNs. Float.compare(...)
+    return 0;
+}
+
+// whether sector in vertex m contains sector in vertex p in the same coordinates
+bool sectorContainsSector(node_t* m, node_t* p) {
+    return area(m->prev, m, p->prev) < 0 && area(p->next, m, m->next) < 0;
+}
+
+// David Eberly's algorithm for finding a bridge between hole and outer polygon
+node_t* findHoleBridge(node_t* hole, node_t* outerNode) {
+    node_t* p = outerNode;
+    coord_t hx = hole->x,
+            hy = hole->y,
+            qx = -REAL_MAX_VALUE(qx);
+    node_t* m = NULL;
+
+    // find a segment intersected by a ray from the hole's leftmost point to the left;
+    // segment's endpoint with lesser x will be potential connection point
+    do {
+        if (hy <= p->y && hy >= p->next->y && p->next->y != p->y) {
+            coord_t x = p->x + (hy - p->y) * (p->next->x - p->x) / (p->next->y - p->y);
+            if (x <= hx && x > qx) {
+                qx = x;
+                if (x == hx) {
+                    if (hx == p->y) return p;
+                    if (hy == p->next->y) return p->next;
+                }
+                m = p->x < p->next->x ? p : p->next;
+            }
+        }
+        p = p->next;
+    } while (p != outerNode);
+
+    if (m == NULL) return NULL;
+
+    if (hx == qx) return m; // hole touches outer segment; pick leftmost endpoint
+
+    // look for points inside the triangle of hole point, segment intersection and endpoint;
+    // if there are no points found, we have a valid connection;
+    // otherwise choose the point of the minimum angle with the ray as connection point
+    node_t* stop = m;
+    coord_t mx = m->x,
+            my = m->y,
+            tanMin = REAL_MAX_VALUE(tanMin),
+            tan;
+
+    p = m;
+    do {
+        if (hx >= p->x && p->x >= mx && hx != p->x &&
+                pointInTriangle(hy < my ? hx : qx, hy, mx, my, hy < my ? qx : hy, hy, p->x, p->y)) {
+            __auto_type tmp = hy - p->y;
+            tan = THE_ABS(tmp) / (hx - p->x);  // tangential
+
+            if (locallyInside(p, hole) &&
+                    (tan < tanMin || (tan == tanMin && (p->x > m->x || (p->x == m->x && sectorContainsSector(m, p)))))) {
+                m = p;
+                tanMin = tan;
+            }
+        }
+
+        p = p->next;
+    } while (p != stop);
+
+    return m;
+}
+
+// find a bridge between vertices that connects hole with an outer ring and and link it
+void eliminateHole(node_t* hole, node_t* outerNode) {
+    outerNode = findHoleBridge(hole, outerNode);
+    if (outerNode != NULL) {
+        node_t* b = splitPolygon(outerNode, hole);
+
+        // filter collinear points around the cuts
+        filterPoints(outerNode, outerNode->next);
+        filterPoints(b, b->next);
+    }
+}
+
+// link every hole into the outer loop, producing a single-ring polygon without holes
+node_t* eliminateHoles(const polygon_t polygon, const int32_t num, const vidx_t holeIndices[num], node_t* outerNode) {
+    node_t* queue[num];
+    for (int32_t i = 0; i < num; ++i) {
+        vidx_t start = holeIndices[i];
+        vidx_t end = i < num - 1 ? holeIndices[i + 1] : vertices_num(polygon);
+        node_t* list = linkedList(polygon, start, end, false);
+        if (list == list->next) list->steiner = true;
+        queue[i] = getLeftmost(list);
+    }
+
+    qsort(queue, num, sizeof(queue[0]), compareX);
+
+    // process holes from left to right
+    for (int32_t i = 0; i < num; ++i) {
+        eliminateHole(queue[i], outerNode);
+        outerNode = filterPoints(outerNode, outerNode->next);
+    }
+    return outerNode;
+}
+
+/**
+ *  This is a derivative work from https://github.com/mapbox/earcut
+ */
+MYIDEF triangles_t polygon_earcut(const polygon_t polygon, const int32_t num, const vidx_t holeIndices[num]) {
+    bool hasHole = (num > 0 && holeIndices != NULL);
+    const vidx_t outerLen = hasHole ? holeIndices[0] : polygon->n;
     node_t* outerNode = linkedList(polygon, 0, outerLen, true);
     if (NULL == outerNode || outerNode->next == outerNode->prev) {
         free(outerNode);
         return NULL;
+    }
+
+    if (hasHole) {
+        outerNode = eliminateHoles(polygon, num, holeIndices, outerNode);
     }
 
     coord_t minX = 0, minY = 0, maxX = 0, maxY = 0;

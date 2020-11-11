@@ -251,7 +251,7 @@ MYIDEF triangles_t polygon_triangulate(const vertices_t cs)
         prev = curt;
     }
     // Area must be positive.
-    if (signed_area(cs) <= 0.0) {
+    if (signed_area(cs, 0, cs->n) <= 0.0) {
         ERR("POLYGON_TRIANGULATE - Fatal error!  Polygon has zero or negative area." );
         return NULL;
     }

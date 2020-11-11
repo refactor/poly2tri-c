@@ -15,12 +15,12 @@ TEST only_one(void) {
     coord_t x[] = {8.0, 7.0, 6.0, 7.0};
     coord_t y[] = {1.0, 10.0, 0.0, -10.0};
     const int n = 3;
-    vertices_t polygon = vertices_create(n, x, y);
-    ASSERT_EQ(n, vertices_num(polygon));
+    vertices_t vertices = vertices_create(n, x, y);
+    ASSERT_EQ(n, vertices_num(vertices));
 
     //reverse_polygon(polygon);  // cannot do clockwise-polygon, DONOT do this
-    print_polygon(polygon);
-    triangles_t triangles = polygon_triangulate(polygon);
+    print_polygon(vertices);
+    triangles_t triangles = polygon_triangulate(vertices);
     ASSERTm("MUST BE counterclockwise-polygon", triangles != NULL);
     __auto_type m = triangles_num(triangles);
     ASSERT_EQ(n - 2, m);
@@ -31,10 +31,11 @@ TEST only_one(void) {
     __auto_type tris = triangles_nth(triangles, 0);
     ASSERT_EQUAL_T(&expected_triangles, tris, &boxed_triangle_type_info, NULL);
 
+    polygon_t polygon = polygon_build(vertices, NULL);
     ASSERT( diff_areas(polygon, triangles) < 0.00001);
 
     triangles_free(triangles);
-    vertices_destroy(polygon);
+    polygon_destroy(polygon);
 
     PASS();
 }
@@ -46,10 +47,10 @@ TEST illegal_one(void) {
     coord_t x[] = {7.0, 7.0, 7.0, 8.0};
     coord_t y[] = {-10.0, 10.0, 10.0, 0.0};
     const int n = 3;
-    vertices_t polygon = vertices_create(n, x, y);
-    ASSERT_EQ(n, vertices_num(polygon));
+    vertices_t vertices = vertices_create(n, x, y);
+    ASSERT_EQ(n, vertices_num(vertices));
 
-    triangles_t triangles = polygon_triangulate(polygon);
+    triangles_t triangles = polygon_triangulate(vertices);
     ASSERT_EQ(NULL, triangles);
     
     PASS();
@@ -62,13 +63,13 @@ TEST common_one(void) {
     coord_t x[] = {70.0, 60.0, 0.0, 10.0};
     coord_t y[] = {10.0, 60.0, 50.0, 0.0};
     const int n = ARR_LEN(x);
-    vertices_t polygon = vertices_create(n, x, y);
-    ASSERT_EQ(n, vertices_num(polygon));
+    vertices_t vertices = vertices_create(n, x, y);
+    ASSERT_EQ(n, vertices_num(vertices));
 
     //print_polygon(polygon);
     //reverse_polygon(polygon);
    // print_polygon(polygon);
-    triangles_t triangles = polygon_triangulate(polygon);
+    triangles_t triangles = polygon_triangulate(vertices);
     ASSERT(NULL != triangles);
     __auto_type m = triangles_num(triangles);
     ASSERT_EQ(n - 2, m);
@@ -79,10 +80,12 @@ TEST common_one(void) {
     };
     __auto_type tris = triangles_nth(triangles, 0);
     ASSERT_EQUAL_T(&expected_triangles, tris, &boxed_triangle_type_info, NULL);
+
+    polygon_t polygon = polygon_build(vertices, NULL);
     ASSERT( diff_areas(polygon, triangles) < 0.00001);
 
     triangles_free(triangles);
-    vertices_destroy(polygon);
+    polygon_destroy(polygon);
     PASS();
 }
 SUITE(simple_suite) {

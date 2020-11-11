@@ -69,13 +69,14 @@ TEST hand_test(void) {
     #include "hand_data.h"
     const int n = ARR_LEN(x);
     ASSERT_EQ(n, ARR_LEN(y));
-    vertices_t polygon = vertices_create(n, x, y);
-    ASSERT_EQ(n, vertices_num(polygon));
+    vertices_t vertices = vertices_create(n, x, y);
+    ASSERT_EQ(n, vertices_num(vertices));
 
-    triangles_t triangles = polygon_triangulate(polygon);
+    triangles_t triangles = polygon_triangulate(vertices);
     __auto_type m = triangles_num(triangles);
     ASSERT_EQ(n-2, m);
 
+    polygon_t polygon = polygon_build(vertices, NULL);
     ASSERT( diff_areas(polygon, triangles) < 0.00001);
 
     const int tri_num = n - 2;
@@ -89,7 +90,7 @@ TEST hand_test(void) {
         ASSERT_EQUAL_T(&etris[i], &btris[i], &boxed_triangle_type_info, NULL);
 
     triangles_free(triangles);
-    vertices_destroy(polygon);
+    polygon_destroy(polygon);
 
     PASS();
 }

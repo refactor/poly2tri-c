@@ -84,21 +84,22 @@ void reverse_polygon(vertices_t poly) {
     }
 }
 
-coord_t diff_areas(vertices_t polygon, triangles_t triangles) {
-    __auto_type darea = signed_area(polygon);
+coord_t diff_areas(polygon_t polygon, triangles_t triangles) {
+    __auto_type darea = polygon_area(polygon);
     __typeof__(darea) areas = 0;
     __auto_type m = triangles_num(triangles);
     for (__auto_type i = 0; i < m; ++i) {
         vidx_t* tri = triangles_nth(triangles, i);
-        coord_t ax = vertices_nth_getx(polygon, tri[0]);
-        coord_t ay = vertices_nth_gety(polygon, tri[0]);
-        coord_t bx = vertices_nth_getx(polygon, tri[1]);
-        coord_t by = vertices_nth_gety(polygon, tri[1]);
-        coord_t cx = vertices_nth_getx(polygon, tri[2]);
-        coord_t cy = vertices_nth_gety(polygon, tri[2]);
-        areas += triangle_area(ax,ay, bx,by, cx,cy);
+        vertices_t vertices = polygon_getvertices(polygon);
+        coord_t ax = vertices_nth_getx(vertices, tri[0]);
+        coord_t ay = vertices_nth_gety(vertices, tri[0]);
+        coord_t bx = vertices_nth_getx(vertices, tri[1]);
+        coord_t by = vertices_nth_gety(vertices, tri[1]);
+        coord_t cx = vertices_nth_getx(vertices, tri[2]);
+        coord_t cy = vertices_nth_gety(vertices, tri[2]);
+        areas += THE_ABS(triangle_area(ax,ay, bx,by, cx,cy));
     }
-    DBG("signed_area: %g, triangles-areas: %g", darea, areas);
+    DBG("polygon.area: %g, triangles.area: %g", darea, areas);
     __auto_type diff = darea - areas;
     return THE_ABS(diff);
 }

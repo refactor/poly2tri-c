@@ -32,7 +32,6 @@ typedef int16_t vidx_t;
 
 #define REAL_MAX_VALUE(x) _Generic((x), float:FLT_MAX, double: DBL_MAX) 
 
-
 typedef struct triangles_s* triangles_t;
 
 MYIDEF triangles_t triangles_allocate(vidx_t m);
@@ -60,8 +59,14 @@ MYIDEF holes_t holes_create(vidx_t num, vidx_t holeIndices[num]);
 MYIDEF void    holes_destory(holes_t holes);
 
 
+typedef struct polygon_s* polygon_t;
+MYIDEF polygon_t polygon_build(const vertices_t vertices, const holes_t holes);
+MYIDEF void polygon_destroy(polygon_t polygon);
 
-MYIDEF coord_t signed_area(const vertices_t cs);
+MYIDEF coord_t polygon_area(polygon_t polygon);
+MYIDEF vertices_t polygon_getvertices(polygon_t polygon);
+
+MYIDEF coord_t signed_area(const vertices_t cs, vidx_t start, vidx_t end);
 MYIDEF coord_t triangle_area(const coord_t xa, const coord_t ya, const coord_t xb, const coord_t yb, const coord_t xc, const coord_t yc);
 
 MYIDEF coord_t angle_degree(const coord_t x1, const coord_t y1, const coord_t x2, const coord_t y2, const coord_t x3, const coord_t y3);
@@ -95,6 +100,45 @@ struct triangles_s {
     alignas(8) vidx_t vidx[];
 };
 
+struct polygon_s {
+    vertices_t vertices;
+    holes_t holes;
+};
+
+MYIDEF polygon_t polygon_build(const vertices_t vertices, const holes_t holes) {
+    polygon_t polygon = (__typeof__(polygon)) malloc(sizeof(*polygon));
+    polygon->vertices = vertices;
+    polygon->holes = holes;
+    return polygon;
+}
+
+MYIDEF void polygon_destroy(polygon_t polygon) {
+    if (polygon->vertices) vertices_destroy(polygon->vertices);
+    if (polygon->holes) holes_destory(polygon->holes);
+    free(polygon);
+}
+
+MYIDEF coord_t polygon_area(polygon_t polygon) {
+    holes_t holes = polygon->holes;
+    bool hasHole = holes != NULL;
+    
+    vidx_t holeStart = hasHole ? holes->holeIndices[0] : vertices_num(polygon->vertices);
+    __auto_type sarea = THE_ABS(signed_area(polygon->vertices, 0, holeStart));
+    __auto_type sum = (__typeof__(sarea))0;
+    if (hasHole) {
+        for (vidx_t i = 0; i < holes->num; ++i) {
+            vidx_t start = holes->holeIndices[i];
+            vidx_t end = i < holes->num - 1 ? holes->holeIndices[i + 1] : vertices_num(polygon->vertices);
+            sum += THE_ABS(signed_area(polygon->vertices, start, end));
+        }
+    }
+    return sarea - sum;
+}
+
+MYIDEF vertices_t polygon_getvertices(polygon_t polygon) {
+    return polygon->vertices;
+}
+
 MYIDEF triangles_t triangles_allocate(vidx_t m) {
     triangles_t triangles =
         (__typeof__(triangles)) aligned_alloc(8, sizeof(*triangles) + m * 3 * sizeof(vidx_t));
@@ -124,7 +168,7 @@ MYIDEF vidx_t triangles_append(triangles_t triangles, vidx_t a, vidx_t b, vidx_t
     return triangles->m;
 }
 
-MYIDEF vertices_t vertices_allocate(vidx_t n) {
+vertices_t vertices_allocate(vidx_t n) {
     vertices_t cs = (__typeof__(cs)) aligned_alloc(8, sizeof(*cs) + n * (COORD_X_SZ + COORD_Y_SZ) );
     cs->N = n;
     return cs;
@@ -189,10 +233,10 @@ MYIDEF void holes_destory(holes_t holes) {
     Input, double X[N], Y[N], the vertex coordinates.
     Output, double POLYGON_AREA, the area of the polygon.
 */
-MYIDEF coord_t signed_area(const vertices_t cs)
+MYIDEF coord_t signed_area(const vertices_t cs, vidx_t start, vidx_t end)
 {
     coord_t area = (__typeof__(area))0;
-    for (vidx_t i = 0, j = cs->n - 1; i < cs->n; i++ ) {
+    for (vidx_t i = start, j = end - 1; i < end; i++ ) {
         __auto_type x_j = vertices_nth_getx(cs, j);
         __auto_type y_j = vertices_nth_gety(cs, j);
         __auto_type x_i = vertices_nth_getx(cs, i);

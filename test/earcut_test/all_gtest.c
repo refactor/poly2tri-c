@@ -31,10 +31,12 @@ TEST ccw_test1(void) {
     vidx_t* tri = triangles_nth(triangles, 0);
     ASSERT_EQUAL_T(&expected_triangles, tri, &boxed_triangle_type_info, NULL);
 
-    ASSERT( diff_areas(vertices, triangles) < 0.00001);
+    polygon_t polygon = polygon_build(vertices, NULL);
+    ASSERT( diff_areas(polygon, triangles) < 0.00001);
 
+    polygon_destroy(polygon);
     triangles_free(triangles);
-    vertices_destroy(vertices);
+
     PASS();
 }
 
@@ -58,10 +60,12 @@ TEST cw_test2(void) {
     vidx_t* tri = triangles_nth(triangles, 0);
     ASSERT_EQUAL_T(&expected_triangles, tri, &boxed_triangle_type_info, NULL);
 
-    //ASSERT( diff_areas(polygon, triangles) < 0.00001);
+    polygon_t polygon = polygon_build(vertices, NULL);
+    ASSERT( diff_areas(polygon, triangles) < 0.00001);
 
     triangles_free(triangles);
-    vertices_destroy(vertices);
+    polygon_destroy(polygon);
+
     PASS();
 }
 
@@ -85,10 +89,12 @@ TEST cw_test3(void) {
     vidx_t* tri = triangles_nth(triangles, 0);
     ASSERT_EQUAL_T(&expected_triangles, tri, &boxed_triangle_type_info, NULL);
 
-    //ASSERT( diff_areas(polygon, triangles) < 0.00001);
+    polygon_t polygon = polygon_build(vertices, NULL);
+    ASSERT( diff_areas(polygon, triangles) < 0.00001);
 
     triangles_free(triangles);
-    vertices_destroy(vertices);
+    polygon_destroy(polygon);
+
     PASS();
 }
 
@@ -112,9 +118,12 @@ TEST i18_test(void) {
     //print_triangles(triangles);
     vidx_t* tri = triangles_nth(triangles, 0);
     ASSERT_EQUAL_T(expected_triangles, tri, &boxed_triangle_type_info, NULL);
-    ASSERT( diff_areas(vertices, triangles) < 0.00001);
+    polygon_t polygon = polygon_build(vertices, NULL);
+    ASSERT( diff_areas(polygon, triangles) < 0.00001);
 
     triangles_free(triangles);
+    polygon_destroy(polygon);
+
     PASS();
 }
 
@@ -132,7 +141,11 @@ TEST comb_test(void) {
     //print_triangles(triangles);
     vidx_t* tri = triangles_nth(triangles, 0);
     ASSERT_EQUAL_T(expected_triangles, tri, &boxed_triangle_type_info, NULL);
-    ASSERT( diff_areas(vertices, triangles) < 0.00001);
+    polygon_t polygon = polygon_build(vertices, NULL);
+    ASSERT( diff_areas(polygon, triangles) < 0.00001);
+
+    triangles_free(triangles);
+    polygon_destroy(polygon);
 
     PASS();
 }
@@ -155,7 +168,11 @@ vidx_t expected_triangles[] = {
     //print_triangles(triangles);
     vidx_t* tri = triangles_nth(triangles, 0);
     ASSERT_EQUAL_T(expected_triangles, tri, &boxed_triangle_type_info, NULL);
-    ASSERT( diff_areas(vertices, triangles) < 0.00001);
+    polygon_t polygon = polygon_build(vertices, NULL);
+    ASSERT( diff_areas(polygon, triangles) < 0.00001);
+
+    triangles_free(triangles);
+    polygon_destroy(polygon);
 
     PASS();
 }
@@ -189,11 +206,13 @@ TEST hole1_test(void) {
 
     vidx_t* tri = triangles_nth(triangles, 0);
     ASSERT_EQUAL_T(expected_triangles, tri, &boxed_triangle_type_info, NULL);
-//    ASSERT( diff_areas(polygon, triangles) < 0.00001);
 
-    holes_destory(holes);
-    vertices_destroy(vertices);
+    polygon_t polygon = polygon_build(vertices, holes);
+    ASSERT( diff_areas(polygon, triangles) < 0.00001);
+
     triangles_free(triangles);
+    polygon_destroy(polygon);
+
     PASS();
 }
 

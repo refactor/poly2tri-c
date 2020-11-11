@@ -67,7 +67,7 @@ void removeNode(node_t *p) {
 
 node_t* linkedList(const vertices_t vertices, vidx_t start, vidx_t end, bool counterclockwise) {
     node_t* last = NULL;
-    if (counterclockwise == (signed_area(vertices) > 0)) {
+    if (counterclockwise == (signed_area(vertices, start, end) > 0)) {
         for (vidx_t i = start; i < end; ++i) {
             __auto_type xi = vertices_nth_getx(vertices, i);
             __auto_type yi = vertices_nth_gety(vertices, i);

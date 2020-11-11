@@ -28,31 +28,40 @@ typedef int16_t vidx_t;
 
 #define THE_MIN(a, b) ((a) < (b) ? (a) : (b))
 #define THE_MAX(a, b) ((a) > (b) ? (a) : (b))
-#define THE_ABS(expr) ((expr) >= (__typeof__(expr))0 ? (expr) : -(expr))
+#define THE_ABS(expr) ({__auto_type v = (expr); v >= (__typeof__(v))0 ? v : -v;})
 
 #define REAL_MAX_VALUE(x) _Generic((x), float:FLT_MAX, double: DBL_MAX) 
 
-typedef struct polygon_s* polygon_t;
 
 typedef struct triangles_s* triangles_t;
 
-MYIDEF triangles_t allocate_triangles(vidx_t m);
-MYIDEF void free_triangles(triangles_t triangles);
+MYIDEF triangles_t triangles_allocate(vidx_t m);
+MYIDEF void        triangles_free(triangles_t triangles);
 
-MYIDEF vidx_t triangles_num(triangles_t triangles);
+MYIDEF vidx_t  triangles_num(triangles_t triangles);
 MYIDEF vidx_t* triangles_nth(triangles_t triangles, vidx_t i);
-MYIDEF vidx_t append_triangle(triangles_t triangles, vidx_t a, vidx_t b, vidx_t c);
+MYIDEF vidx_t  triangles_append(triangles_t triangles, vidx_t a, vidx_t b, vidx_t c);
 
-MYIDEF polygon_t allocate_polygon(vidx_t n);
-MYIDEF void free_polygon(polygon_t poly);
 
-MYIDEF vidx_t vertices_num(const polygon_t poly);
-MYIDEF coord_t coord_seq_getx(const polygon_t cs, vidx_t idx);
-MYIDEF void coord_seq_setx(polygon_t cs, vidx_t idx, coord_t x);
-MYIDEF coord_t coord_seq_gety(const polygon_t cs, vidx_t idx);
-MYIDEF void coord_seq_sety(polygon_t cs, vidx_t idx, coord_t y);
+typedef struct vertices_s* vertices_t;
 
-MYIDEF coord_t signed_area(const polygon_t cs);
+MYIDEF vertices_t vertices_create(vidx_t n, coord_t x[n], coord_t y[n]);
+MYIDEF void       vertices_destroy(vertices_t poly);
+
+MYIDEF vidx_t  vertices_num(const vertices_t poly);
+MYIDEF coord_t vertices_nth_getx(const vertices_t cs, vidx_t idx);
+MYIDEF coord_t vertices_nth_gety(const vertices_t cs, vidx_t idx);
+MYIDEF void    vertices_nth_setxy(vertices_t cs, vidx_t idx, coord_t x, coord_t y);
+
+
+typedef struct holes_s* holes_t;
+
+MYIDEF holes_t holes_create(vidx_t num, vidx_t holeIndices[num]);
+MYIDEF void    holes_destory(holes_t holes);
+
+
+
+MYIDEF coord_t signed_area(const vertices_t cs);
 MYIDEF coord_t triangle_area(const coord_t xa, const coord_t ya, const coord_t xb, const coord_t yb, const coord_t xc, const coord_t yc);
 
 MYIDEF coord_t angle_degree(const coord_t x1, const coord_t y1, const coord_t x2, const coord_t y2, const coord_t x3, const coord_t y3);
@@ -68,7 +77,7 @@ MYIDEF bool intersects(const coord_t xa, const coord_t ya, const coord_t xb, con
 #define COORD_X_SZ sizeof(coord_t)
 #define COORD_Y_SZ sizeof(coord_t)
 
-struct polygon_s {
+struct vertices_s {
     union {
         const vidx_t n;
         vidx_t N;
@@ -76,19 +85,24 @@ struct polygon_s {
     alignas(8) coord_t vertices[];
 };
 
+struct holes_s {
+    vidx_t num;
+    alignas(8) vidx_t holeIndices[];
+};
+
 struct triangles_s {
     vidx_t m;
     alignas(8) vidx_t vidx[];
 };
 
-MYIDEF triangles_t allocate_triangles(vidx_t m) {
+MYIDEF triangles_t triangles_allocate(vidx_t m) {
     triangles_t triangles =
         (__typeof__(triangles)) aligned_alloc(8, sizeof(*triangles) + m * 3 * sizeof(vidx_t));
     triangles->m = 0;
     return triangles;
 }
 
-MYIDEF void free_triangles(triangles_t triangles) {
+MYIDEF void triangles_free(triangles_t triangles) {
     free(triangles);
 }
 
@@ -100,7 +114,7 @@ MYIDEF vidx_t* triangles_nth(triangles_t triangles, vidx_t i) {
     return &triangles->vidx[i * 3];
 }
 
-MYIDEF vidx_t append_triangle(triangles_t triangles, vidx_t a, vidx_t b, vidx_t c) {
+MYIDEF vidx_t triangles_append(triangles_t triangles, vidx_t a, vidx_t b, vidx_t c) {
     vidx_t i = triangles->m;
     __auto_type tri = triangles_nth(triangles, i);
     tri[0] = a;
@@ -110,34 +124,50 @@ MYIDEF vidx_t append_triangle(triangles_t triangles, vidx_t a, vidx_t b, vidx_t 
     return triangles->m;
 }
 
-MYIDEF polygon_t allocate_polygon(vidx_t n) {
-    polygon_t cs = (__typeof__(cs)) aligned_alloc(8, sizeof(*cs) + n * (COORD_X_SZ + COORD_Y_SZ) );
+MYIDEF vertices_t vertices_allocate(vidx_t n) {
+    vertices_t cs = (__typeof__(cs)) aligned_alloc(8, sizeof(*cs) + n * (COORD_X_SZ + COORD_Y_SZ) );
     cs->N = n;
     return cs;
 }
 
-MYIDEF void free_polygon(polygon_t poly) {
+MYIDEF vertices_t vertices_create(vidx_t n, coord_t x[n], coord_t y[n]) {
+    vertices_t polygon = vertices_allocate(n);
+    for (__auto_type i=0; i<n; ++i) {
+        vertices_nth_setxy(polygon, i, x[i], y[i]);
+    }
+    return polygon;
+}
+
+MYIDEF void vertices_destroy(vertices_t poly) {
     free(poly);
 }
 
-MYIDEF vidx_t vertices_num(const polygon_t poly) {
+MYIDEF vidx_t vertices_num(const vertices_t poly) {
     return poly->n;
 }
 
-MYIDEF coord_t coord_seq_getx(const polygon_t cs, vidx_t idx) {
+MYIDEF coord_t vertices_nth_getx(const vertices_t cs, vidx_t idx) {
     return cs->vertices[idx];
 }
 
-MYIDEF void coord_seq_setx(polygon_t cs, vidx_t idx, coord_t x) {
+MYIDEF void vertices_nth_setxy(vertices_t cs, vidx_t idx, coord_t x, coord_t y) {
     cs->vertices[idx] = x;
+    cs->vertices[cs->n + idx] = y;
 }
 
-MYIDEF coord_t coord_seq_gety(const polygon_t cs, vidx_t idx) {
+MYIDEF coord_t vertices_nth_gety(const vertices_t cs, vidx_t idx) {
     return cs->vertices[cs->n  + idx];
 }
 
-MYIDEF void coord_seq_sety(polygon_t cs, vidx_t idx, coord_t y) {
-    cs->vertices[cs->n + idx] = y;
+MYIDEF holes_t holes_create(vidx_t num, vidx_t holeIndices[num]) {
+    holes_t holes = (__typeof__(holes)) aligned_alloc(8, sizeof(*holes) + num * sizeof(holes->holeIndices[0]));
+    holes->num = num;
+    for (vidx_t i = 0; i < num; ++i) holes->holeIndices[i] = holeIndices[i];
+    return holes;
+}
+
+MYIDEF void holes_destory(holes_t holes) {
+    free(holes);
 }
 
 /**
@@ -159,14 +189,14 @@ MYIDEF void coord_seq_sety(polygon_t cs, vidx_t idx, coord_t y) {
     Input, double X[N], Y[N], the vertex coordinates.
     Output, double POLYGON_AREA, the area of the polygon.
 */
-MYIDEF coord_t signed_area(const polygon_t cs)
+MYIDEF coord_t signed_area(const vertices_t cs)
 {
     coord_t area = (__typeof__(area))0;
     for (vidx_t i = 0, j = cs->n - 1; i < cs->n; i++ ) {
-        __auto_type x_j = coord_seq_getx(cs, j);
-        __auto_type y_j = coord_seq_gety(cs, j);
-        __auto_type x_i = coord_seq_getx(cs, i);
-        __auto_type y_i = coord_seq_gety(cs, i);
+        __auto_type x_j = vertices_nth_getx(cs, j);
+        __auto_type y_j = vertices_nth_gety(cs, j);
+        __auto_type x_i = vertices_nth_getx(cs, i);
+        __auto_type y_i = vertices_nth_gety(cs, i);
         area += (x_j - x_i) * (y_i + y_j);
 //        area += x_j * y_i - x_i * y_j;
         j = i;

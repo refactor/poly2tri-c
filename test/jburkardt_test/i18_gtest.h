@@ -7,17 +7,10 @@
 
 TEST i18_test(void) {
     #include "i18_data.h"
-    printf("tri.len: %zu\n", ARR_LEN(expected_triangles));
-    printf("tri.sz: %zu\n", sizeof(expected_triangles));
     ASSERT_EQ(ARR_LEN(x), ARR_LEN(y));
 
     const int n = ARR_LEN(x);
-    DBG("arr.len: %u", n);
-    polygon_t polygon = allocate_polygon(n);
-    for (__auto_type i=0; i<n; ++i) {
-        coord_seq_setx(polygon, i, x[i]);
-        coord_seq_sety(polygon, i, y[i]);
-    }
+    vertices_t polygon = vertices_create(n, x, y);
     ASSERT_EQ(n, vertices_num(polygon));
 //    print_polygon(polygon);
 //    reverse_polygon(polygon);
@@ -30,7 +23,6 @@ TEST i18_test(void) {
     ASSERT( diff_areas(polygon, triangles) < 0.00001);
     
     const int tri_num = n - 2;
-//    i4mat_transpose_print(3, tri_num, (int*)triangles, "Gotcha Triangles");
 
     boxed_triangle* etris = (boxed_triangle*)expected_triangles;
     sort_triangles(tri_num, etris);
@@ -40,8 +32,8 @@ TEST i18_test(void) {
     for (int i = 0; i < tri_num; ++i) 
         ASSERT_EQUAL_T(&etris[i], &btris[i], &boxed_triangle_type_info, NULL);
 
-    free_triangles(triangles);
-    free_polygon(polygon);
+    triangles_free(triangles);
+    vertices_destroy(polygon);
     PASS();
 }
 

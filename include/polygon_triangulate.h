@@ -11,7 +11,7 @@
 #endif
 #include "geometry_type.h"
 
-triangles_t polygon_triangulate(const polygon_t cs);
+triangles_t polygon_triangulate(const vertices_t cs);
 
 #endif // POLY2TRI_INCLUDE_H
 
@@ -57,7 +57,7 @@ triangles_t polygon_triangulate(const polygon_t cs);
 
     Output, int DIAGONALIE, the value of the test.
 */
-static bool diagonalie(vidx_t im1, vidx_t ip1, vidx_t next_node[], const polygon_t cs)
+static bool diagonalie(vidx_t im1, vidx_t ip1, vidx_t next_node[], const vertices_t cs)
 {
     vidx_t first = im1;
     vidx_t j = first;
@@ -73,14 +73,14 @@ static bool diagonalie(vidx_t im1, vidx_t ip1, vidx_t next_node[], const polygon
         if ( j == im1 || j == ip1 || jp1 == im1 || jp1 == ip1 ) {
         }
         else {
-            __auto_type x_im1 = coord_seq_getx(cs, im1);
-            __auto_type y_im1 = coord_seq_gety(cs, im1);
-            __auto_type x_ip1 = coord_seq_getx(cs, ip1);
-            __auto_type y_ip1 = coord_seq_gety(cs, ip1);
-            __auto_type x_j = coord_seq_getx(cs, j);
-            __auto_type y_j = coord_seq_gety(cs, j);
-            __auto_type x_jp1 = coord_seq_getx(cs, jp1);
-            __auto_type y_jp1 = coord_seq_gety(cs, jp1);
+            __auto_type x_im1 = vertices_nth_getx(cs, im1);
+            __auto_type y_im1 = vertices_nth_gety(cs, im1);
+            __auto_type x_ip1 = vertices_nth_getx(cs, ip1);
+            __auto_type y_ip1 = vertices_nth_gety(cs, ip1);
+            __auto_type x_j = vertices_nth_getx(cs, j);
+            __auto_type y_j = vertices_nth_gety(cs, j);
+            __auto_type x_jp1 = vertices_nth_getx(cs, jp1);
+            __auto_type y_jp1 = vertices_nth_gety(cs, jp1);
             if (intersects(x_im1, y_im1, x_ip1, y_ip1, x_j, y_j, x_jp1, y_jp1)) {
                 return false;
             }
@@ -121,19 +121,19 @@ static bool diagonalie(vidx_t im1, vidx_t ip1, vidx_t next_node[], const polygon
 
     Output, int IN_CONE, the value of the test.
 */
-static bool in_cone(vidx_t im1, vidx_t ip1, vidx_t prev_node[], vidx_t next_node[], const polygon_t cs)
+static bool in_cone(vidx_t im1, vidx_t ip1, vidx_t prev_node[], vidx_t next_node[], const vertices_t cs)
 {
     __auto_type im2 = prev_node[im1];
     __auto_type i   = next_node[im1];
 
-    __auto_type x_im1 = coord_seq_getx(cs, im1);
-    __auto_type y_im1 = coord_seq_gety(cs, im1);
-    __auto_type x_im2 = coord_seq_getx(cs, im2);
-    __auto_type y_im2 = coord_seq_gety(cs, im2);
-    __auto_type x_ip1 = coord_seq_getx(cs, ip1);
-    __auto_type y_ip1 = coord_seq_gety(cs, ip1);
-    __auto_type x_i = coord_seq_getx(cs, i);
-    __auto_type y_i = coord_seq_gety(cs, i);
+    __auto_type x_im1 = vertices_nth_getx(cs, im1);
+    __auto_type y_im1 = vertices_nth_gety(cs, im1);
+    __auto_type x_im2 = vertices_nth_getx(cs, im2);
+    __auto_type y_im2 = vertices_nth_gety(cs, im2);
+    __auto_type x_ip1 = vertices_nth_getx(cs, ip1);
+    __auto_type y_ip1 = vertices_nth_gety(cs, ip1);
+    __auto_type x_i = vertices_nth_getx(cs, i);
+    __auto_type y_i = vertices_nth_gety(cs, i);
     if (0.0 <= triangle_area(x_im1, y_im1, x_i, y_i, x_im2, y_im2)) {
         bool t2 = triangle_area(x_im1, y_im1, x_ip1, y_ip1, x_im2, y_im2) > 0.0;
         bool t3 = triangle_area(x_ip1, y_ip1, x_im1, y_im1, x_i, y_i) > 0.0;
@@ -173,7 +173,7 @@ static bool in_cone(vidx_t im1, vidx_t ip1, vidx_t prev_node[], vidx_t next_node
 
     Output, int DIAGONAL, the value of the test.
 */
-bool diagonal(vidx_t im1, vidx_t ip1, vidx_t prev_node[], vidx_t next_node[], const polygon_t cs)
+bool diagonal(vidx_t im1, vidx_t ip1, vidx_t prev_node[], vidx_t next_node[], const vertices_t cs)
 {
     bool value1 = in_cone(im1, ip1, prev_node, next_node, cs);
     bool value2 = in_cone(ip1, im1, prev_node, next_node, cs);
@@ -219,7 +219,7 @@ bool diagonal(vidx_t im1, vidx_t ip1, vidx_t prev_node[], vidx_t next_node[], co
     Output, int TRIANGLES[3*(N-2)], the triangles of the triangulation.
 */
 #define angle_tol 5.7E-05
-MYIDEF triangles_t polygon_triangulate(const polygon_t cs)
+MYIDEF triangles_t polygon_triangulate(const vertices_t cs)
 {
     const vidx_t n = cs->n;
     // We must have at least 3 vertices.
@@ -229,7 +229,7 @@ MYIDEF triangles_t polygon_triangulate(const polygon_t cs)
     }
     // Consecutive vertices cannot be equal.
     for (vidx_t curt = 0, prev = n-1; curt < n; curt++ ) {
-        if ( coord_seq_getx(cs, prev) == coord_seq_getx(cs, curt) && coord_seq_gety(cs, prev) == coord_seq_gety(cs, curt) ) {
+        if ( vertices_nth_getx(cs, prev) == vertices_nth_getx(cs, curt) && vertices_nth_gety(cs, prev) == vertices_nth_gety(cs, curt) ) {
           ERR("POLYGON_TRIANGULATE - Fatal error!  Two consecutive nodes are identical." );
           return NULL;
         }
@@ -240,9 +240,9 @@ MYIDEF triangles_t polygon_triangulate(const polygon_t cs)
     for (vidx_t curt = 0, prev = n-1; curt < n; curt++ ) {
         vidx_t next = ( ( curt + 1 ) % n ); 
 
-        __auto_type angle = angle_degree(coord_seq_getx(cs, prev), coord_seq_gety(cs, prev), 
-                                         coord_seq_getx(cs, curt), coord_seq_gety(cs, curt), 
-                                         coord_seq_getx(cs, next), coord_seq_gety(cs, next) );
+        __auto_type angle = angle_degree(vertices_nth_getx(cs, prev), vertices_nth_gety(cs, prev), 
+                                         vertices_nth_getx(cs, curt), vertices_nth_gety(cs, curt), 
+                                         vertices_nth_getx(cs, next), vertices_nth_gety(cs, next) );
 
         if ( THE_ABS( angle ) <= angle_tol ) {
             ERR("POLYGON_TRIANGULATE - Fatal error! Polygon has an angle smaller than %g, accurring at node %d", angle_tol, curt);
@@ -256,7 +256,7 @@ MYIDEF triangles_t polygon_triangulate(const polygon_t cs)
         return NULL;
     }
 
-    triangles_t triangles = allocate_triangles(n - 2);
+    triangles_t triangles = triangles_allocate(n - 2);
 
     // PREV_NODE and NEXT_NODE point to the previous and next nodes.
     vidx_t* prev_node = (__typeof__(prev_node)) malloc ( n * sizeof ( *prev_node ) );
@@ -298,7 +298,7 @@ MYIDEF triangles_t polygon_triangulate(const polygon_t cs)
             ear[i1] = diagonal ( i0, i3, prev_node, next_node, cs);
             ear[i3] = diagonal ( i1, i4, prev_node, next_node, cs);
             // Add the diagonal [I3, I1, I2] to the list.
-            triangle_idx = append_triangle(triangles, i3, i1, i2);
+            triangle_idx = triangles_append(triangles, i3, i1, i2);
         }
         // Try the next vertex.
         i2 = next_node[i2];
@@ -307,7 +307,7 @@ MYIDEF triangles_t polygon_triangulate(const polygon_t cs)
     i3 = next_node[i2];
     i1 = prev_node[i2];
 
-    append_triangle(triangles, i3, i1, i2);
+    triangles_append(triangles, i3, i1, i2);
 
     free ( ear );
     free ( next_node );

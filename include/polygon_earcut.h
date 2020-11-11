@@ -6,7 +6,7 @@
 #endif
 #include "geometry_type.h"
 
-triangles_t polygon_earcut(const polygon_t polygon, const int32_t num, const vidx_t holes[num]);
+triangles_t polygon_earcut(const vertices_t vertices, const holes_t holes);
 
 #endif // POLYGON_EARCUT_H
 
@@ -65,19 +65,19 @@ void removeNode(node_t *p) {
     if (p->nextZ != NULL) p->nextZ->prevZ = p->prevZ;
 }
 
-node_t* linkedList(const polygon_t polygon, vidx_t start, vidx_t end, bool counterclockwise) {
+node_t* linkedList(const vertices_t vertices, vidx_t start, vidx_t end, bool counterclockwise) {
     node_t* last = NULL;
-    if (counterclockwise == (signed_area(polygon) > 0)) {
+    if (counterclockwise == (signed_area(vertices) > 0)) {
         for (vidx_t i = start; i < end; ++i) {
-            __auto_type xi = coord_seq_getx(polygon, i);
-            __auto_type yi = coord_seq_gety(polygon, i);
+            __auto_type xi = vertices_nth_getx(vertices, i);
+            __auto_type yi = vertices_nth_gety(vertices, i);
             last = insertNode(i, xi, yi, last);
         }
     }
     else {
         for (vidx_t i = end - 1; i >= start; --i) {
-            __auto_type xi = coord_seq_getx(polygon, i);
-            __auto_type yi = coord_seq_gety(polygon, i);
+            __auto_type xi = vertices_nth_getx(vertices, i);
+            __auto_type yi = vertices_nth_gety(vertices, i);
             last = insertNode(i, xi, yi, last);
         }
     }
@@ -400,7 +400,7 @@ node_t* cureLocalIntersections(node_t* start, triangles_t triangles) {
                *b = p->next->next;
 
         if (!equals(a, b) && seg_intersects(a, p, p->next, b) && locallyInside(a, b) && locallyInside(b, a)) {
-            append_triangle(triangles, a->i, p->i, b->i);
+            triangles_append(triangles, a->i, p->i, b->i);
 
             // remove two nodes involved
             removeNode(p);
@@ -487,7 +487,7 @@ void earcutLinked(node_t* ear, triangles_t triangles, coord_t minX, coord_t minY
 
         if (invSize != 0 ? isEarHashed(ear, minX, minY, invSize) : isEar(ear)) {
             // cut off the triangle
-            append_triangle(triangles, prev->i, ear->i, next->i);
+            triangles_append(triangles, prev->i, ear->i, next->i);
 
             removeNode(ear);
             free(ear);
@@ -621,12 +621,12 @@ void eliminateHole(node_t* hole, node_t* outerNode) {
 }
 
 // link every hole into the outer loop, producing a single-ring polygon without holes
-node_t* eliminateHoles(const polygon_t polygon, const int32_t num, const vidx_t holeIndices[num], node_t* outerNode) {
+node_t* eliminateHoles(const vertices_t vertices, const int32_t num, const vidx_t holeIndices[num], node_t* outerNode) {
     node_t* queue[num];
     for (int32_t i = 0; i < num; ++i) {
         vidx_t start = holeIndices[i];
-        vidx_t end = i < num - 1 ? holeIndices[i + 1] : vertices_num(polygon);
-        node_t* list = linkedList(polygon, start, end, false);
+        vidx_t end = i < num - 1 ? holeIndices[i + 1] : vertices_num(vertices);
+        node_t* list = linkedList(vertices, start, end, false);
         if (list == list->next) list->steiner = true;
         queue[i] = getLeftmost(list);
     }
@@ -644,29 +644,29 @@ node_t* eliminateHoles(const polygon_t polygon, const int32_t num, const vidx_t 
 /**
  *  This is a derivative work from https://github.com/mapbox/earcut
  */
-MYIDEF triangles_t polygon_earcut(const polygon_t polygon, const int32_t num, const vidx_t holeIndices[num]) {
-    bool hasHole = (num > 0 && holeIndices != NULL);
-    const vidx_t outerLen = hasHole ? holeIndices[0] : polygon->n;
-    node_t* outerNode = linkedList(polygon, 0, outerLen, true);
+MYIDEF triangles_t polygon_earcut(const vertices_t vertices, const holes_t holes) {
+    bool hasHole = (holes != NULL && holes->num > 0);
+    const vidx_t outerLen = hasHole ? holes->holeIndices[0] : vertices->n;
+    node_t* outerNode = linkedList(vertices, 0, outerLen, true);
     if (NULL == outerNode || outerNode->next == outerNode->prev) {
         free(outerNode);
         return NULL;
     }
 
     if (hasHole) {
-        outerNode = eliminateHoles(polygon, num, holeIndices, outerNode);
+        outerNode = eliminateHoles(vertices, holes->num, holes->holeIndices, outerNode);
     }
 
     coord_t minX = 0, minY = 0, maxX = 0, maxY = 0;
     coord_t invSize = 0;
     // if the shape is not too simple, we'll use z-order curve hash later; calculate polygon bbox
-    if (polygon->n > 80) {
-        minX = maxX = coord_seq_getx(polygon, 0);
-        minY = maxY = coord_seq_gety(polygon, 0);
+    if (vertices->n > 80) {
+        minX = maxX = vertices_nth_getx(vertices, 0);
+        minY = maxY = vertices_nth_gety(vertices, 0);
 
         for (vidx_t i = 1; i < outerLen; ++i) {
-            __auto_type xi = coord_seq_getx(polygon, i);
-            __auto_type yi = coord_seq_gety(polygon, i);
+            __auto_type xi = vertices_nth_getx(vertices, i);
+            __auto_type yi = vertices_nth_gety(vertices, i);
             if (xi < minX) minX = xi;
             if (yi < minY) minY = yi;
             if (xi > maxX) maxX = xi;
@@ -679,7 +679,7 @@ MYIDEF triangles_t polygon_earcut(const polygon_t polygon, const int32_t num, co
         invSize = THE_MAX(deltaX, deltaY);
         invSize = invSize != 0 ? 1 / invSize : 0;
     }
-    triangles_t triangles = allocate_triangles(polygon->n - 2);
+    triangles_t triangles = triangles_allocate(vertices->n - 2);
     earcutLinked(outerNode, triangles, minX, minY, invSize, 0);
     return triangles;
 }

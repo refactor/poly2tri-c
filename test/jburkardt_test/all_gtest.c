@@ -14,14 +14,8 @@
 TEST only_one(void) {
     coord_t x[] = {8.0, 7.0, 6.0, 7.0};
     coord_t y[] = {1.0, 10.0, 0.0, -10.0};
-    DBG("coord_t.sz: %zu", sizeof(coord_t));
-    DBG("x.sz: %zu, y.sz: %zu", sizeof(x), sizeof(y));
     const int n = 3;
-    polygon_t polygon = allocate_polygon(n);
-    for (__auto_type i=0; i<3; ++i) {
-        coord_seq_setx(polygon, i, x[i]);
-        coord_seq_sety(polygon, i, y[i]);
-    }
+    vertices_t polygon = vertices_create(n, x, y);
     ASSERT_EQ(n, vertices_num(polygon));
 
     //reverse_polygon(polygon);  // cannot do clockwise-polygon, DONOT do this
@@ -39,8 +33,8 @@ TEST only_one(void) {
 
     ASSERT( diff_areas(polygon, triangles) < 0.00001);
 
-    free_triangles(triangles);
-    free_polygon(polygon);
+    triangles_free(triangles);
+    vertices_destroy(polygon);
 
     PASS();
 }
@@ -52,11 +46,7 @@ TEST illegal_one(void) {
     coord_t x[] = {7.0, 7.0, 7.0, 8.0};
     coord_t y[] = {-10.0, 10.0, 10.0, 0.0};
     const int n = 3;
-    polygon_t polygon = allocate_polygon(n);
-    for (__auto_type i=0; i<n; ++i) {
-        coord_seq_setx(polygon, i, x[i]);
-        coord_seq_sety(polygon, i, y[i]);
-    }
+    vertices_t polygon = vertices_create(n, x, y);
     ASSERT_EQ(n, vertices_num(polygon));
 
     triangles_t triangles = polygon_triangulate(polygon);
@@ -72,11 +62,7 @@ TEST common_one(void) {
     coord_t x[] = {70.0, 60.0, 0.0, 10.0};
     coord_t y[] = {10.0, 60.0, 50.0, 0.0};
     const int n = ARR_LEN(x);
-    polygon_t polygon = allocate_polygon(n);
-    for (__auto_type i=0; i<n; ++i) {
-        coord_seq_setx(polygon, i, x[i]);
-        coord_seq_sety(polygon, i, y[i]);
-    }
+    vertices_t polygon = vertices_create(n, x, y);
     ASSERT_EQ(n, vertices_num(polygon));
 
     //print_polygon(polygon);
@@ -95,8 +81,8 @@ TEST common_one(void) {
     ASSERT_EQUAL_T(&expected_triangles, tris, &boxed_triangle_type_info, NULL);
     ASSERT( diff_areas(polygon, triangles) < 0.00001);
 
-    free_triangles(triangles);
-    free_polygon(polygon);
+    triangles_free(triangles);
+    vertices_destroy(polygon);
     PASS();
 }
 SUITE(simple_suite) {
@@ -109,7 +95,7 @@ SUITE(simple_suite) {
 GREATEST_MAIN_DEFS();
 
 int main(int argc, char* argv[]) {
-    WARN("vidx_t.sz: %zu bytes, coord_t.sz: %zu bytes", sizeof(vidx_t), sizeof(coord_t));
+    INFO("vidx_t.sz: %zu bytes, coord_t.sz: %zu bytes", sizeof(vidx_t), sizeof(coord_t));
 
     GREATEST_MAIN_BEGIN();
 

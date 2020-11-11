@@ -16,17 +16,12 @@ TEST ccw_test1(void) {
     coord_t xs[] = {70, 60, 0, 10};
     coord_t ys[] = {10, 60, 50, 0};
     const int n = ARR_LEN(xs);
-    polygon_t polygon = allocate_polygon(n);
-    for (int i=0; i<n; ++i) {
-        coord_seq_setx(polygon, i, xs[i]);
-        coord_seq_sety(polygon, i, ys[i]);
-    }
-    ASSERT_EQ(n, vertices_num(polygon));
+    vertices_t vertices = vertices_create(n, xs, ys);
+    ASSERT_EQ(n, vertices_num(vertices));
 
-    triangles_t triangles = polygon_earcut(polygon, 0, NULL);
+    triangles_t triangles = polygon_earcut(vertices, NULL);
     ASSERT(NULL != triangles);
     __auto_type m = triangles_num(triangles);
-    DBG("m=%u", m);
     ASSERT_EQ(n-2, m);
 
     boxed_triangle expected_triangles[] = {
@@ -36,10 +31,10 @@ TEST ccw_test1(void) {
     vidx_t* tri = triangles_nth(triangles, 0);
     ASSERT_EQUAL_T(&expected_triangles, tri, &boxed_triangle_type_info, NULL);
 
-    ASSERT( diff_areas(polygon, triangles) < 0.00001);
+    ASSERT( diff_areas(vertices, triangles) < 0.00001);
 
-    free_triangles(triangles);
-    free_polygon(polygon);
+    triangles_free(triangles);
+    vertices_destroy(vertices);
     PASS();
 }
 
@@ -48,14 +43,10 @@ TEST cw_test2(void) {
     coord_t xs[] = {10,0,60,70};
     coord_t ys[] = {0,50,60,10};
     const int n = ARR_LEN(xs);
-    polygon_t polygon = allocate_polygon(n);
-    for (int i=0; i<n; ++i) {
-        coord_seq_setx(polygon, i, xs[i]);
-        coord_seq_sety(polygon, i, ys[i]);
-    }
-    ASSERT_EQ(n, vertices_num(polygon));
+    vertices_t vertices = vertices_create(n, xs, ys);
+    ASSERT_EQ(n, vertices_num(vertices));
 
-    triangles_t triangles = polygon_earcut(polygon, 0, NULL);
+    triangles_t triangles = polygon_earcut(vertices, NULL);
     ASSERT(NULL != triangles);
     __auto_type m = triangles_num(triangles);
     ASSERT_EQ(n-2, m);
@@ -69,8 +60,8 @@ TEST cw_test2(void) {
 
     //ASSERT( diff_areas(polygon, triangles) < 0.00001);
 
-    free_triangles(triangles);
-    free_polygon(polygon);
+    triangles_free(triangles);
+    vertices_destroy(vertices);
     PASS();
 }
 
@@ -79,14 +70,10 @@ TEST cw_test3(void) {
     coord_t xs[] = {3,5,12,9,5};
     coord_t ys[] = {4,11,8,5,6};
     const int n = ARR_LEN(xs);
-    polygon_t polygon = allocate_polygon(n);
-    for (int i=0; i<n; ++i) {
-        coord_seq_setx(polygon, i, xs[i]);
-        coord_seq_sety(polygon, i, ys[i]);
-    }
-    ASSERT_EQ(n, vertices_num(polygon));
+    vertices_t vertices = vertices_create(n, xs, ys);
+    ASSERT_EQ(n, vertices_num(vertices));
 
-    triangles_t triangles = polygon_earcut(polygon, 0, NULL);
+    triangles_t triangles = polygon_earcut(vertices, NULL);
     ASSERT(NULL != triangles);
     __auto_type m = triangles_num(triangles);
     ASSERT_EQ(n-2, m);
@@ -100,8 +87,8 @@ TEST cw_test3(void) {
 
     //ASSERT( diff_areas(polygon, triangles) < 0.00001);
 
-    free_triangles(triangles);
-    free_polygon(polygon);
+    triangles_free(triangles);
+    vertices_destroy(vertices);
     PASS();
 }
 
@@ -114,14 +101,10 @@ SUITE(earcut_tests) {
 TEST i18_test(void) {
 #include "i18_data.h"
     const int n = ARR_LEN(x);
-    polygon_t polygon = allocate_polygon(n);
-    for (int i=0; i<n; ++i) {
-        coord_seq_setx(polygon, i, x[i]);
-        coord_seq_sety(polygon, i, y[i]);
-    }
-    ASSERT_EQ(n, vertices_num(polygon));
+    vertices_t vertices = vertices_create(n, x, y);
+    ASSERT_EQ(n, vertices_num(vertices));
 
-    triangles_t triangles = polygon_earcut(polygon, 0, NULL);
+    triangles_t triangles = polygon_earcut(vertices, NULL);
     ASSERT(NULL != triangles);
     __auto_type m = triangles_num(triangles);
     ASSERT_EQ(n-2, m);
@@ -129,22 +112,19 @@ TEST i18_test(void) {
     //print_triangles(triangles);
     vidx_t* tri = triangles_nth(triangles, 0);
     ASSERT_EQUAL_T(expected_triangles, tri, &boxed_triangle_type_info, NULL);
-    ASSERT( diff_areas(polygon, triangles) < 0.00001);
+    ASSERT( diff_areas(vertices, triangles) < 0.00001);
 
+    triangles_free(triangles);
     PASS();
 }
 
 TEST comb_test(void) {
 #include "comb_data.h"
     const int n = ARR_LEN(x);
-    polygon_t polygon = allocate_polygon(n);
-    for (int i=0; i<n; ++i) {
-        coord_seq_setx(polygon, i, x[i]);
-        coord_seq_sety(polygon, i, y[i]);
-    }
-    ASSERT_EQ(n, vertices_num(polygon));
+    vertices_t vertices = vertices_create(n, x, y);
+    ASSERT_EQ(n, vertices_num(vertices));
 
-    triangles_t triangles = polygon_earcut(polygon, 0, NULL);
+    triangles_t triangles = polygon_earcut(vertices, NULL);
     ASSERT(NULL != triangles);
     __auto_type m = triangles_num(triangles);
     ASSERT_EQ(n-2, m);
@@ -152,7 +132,7 @@ TEST comb_test(void) {
     //print_triangles(triangles);
     vidx_t* tri = triangles_nth(triangles, 0);
     ASSERT_EQUAL_T(expected_triangles, tri, &boxed_triangle_type_info, NULL);
-    ASSERT( diff_areas(polygon, triangles) < 0.00001);
+    ASSERT( diff_areas(vertices, triangles) < 0.00001);
 
     PASS();
 }
@@ -160,14 +140,10 @@ TEST comb_test(void) {
 TEST hand_test(void) {
 #include "hand_data.h"
     const int n = ARR_LEN(x);
-    polygon_t polygon = allocate_polygon(n);
-    for (int i=0; i<n; ++i) {
-        coord_seq_setx(polygon, i, x[i]);
-        coord_seq_sety(polygon, i, y[i]);
-    }
-    ASSERT_EQ(n, vertices_num(polygon));
+    vertices_t vertices = vertices_create(n, x, y);
+    ASSERT_EQ(n, vertices_num(vertices));
 
-    triangles_t triangles = polygon_earcut(polygon, 0, NULL);
+    triangles_t triangles = polygon_earcut(vertices, NULL);
     ASSERT(NULL != triangles);
     __auto_type m = triangles_num(triangles);
     ASSERT_EQ(n-2, m);
@@ -179,7 +155,7 @@ vidx_t expected_triangles[] = {
     //print_triangles(triangles);
     vidx_t* tri = triangles_nth(triangles, 0);
     ASSERT_EQUAL_T(expected_triangles, tri, &boxed_triangle_type_info, NULL);
-    ASSERT( diff_areas(polygon, triangles) < 0.00001);
+    ASSERT( diff_areas(vertices, triangles) < 0.00001);
 
     PASS();
 }
@@ -195,15 +171,13 @@ TEST hole1_test(void) {
     coord_t x[] = {0, 100, 100,   0, 20, 80, 80, 20};
     coord_t y[] = {0,   0, 100, 100, 20, 20, 80, 80};
     vidx_t holeIndices[] = {4};
-    const int n = ARR_LEN(x);
-    polygon_t polygon = allocate_polygon(n);
-    for (int i=0; i<n; ++i) {
-        coord_seq_setx(polygon, i, x[i]);
-        coord_seq_sety(polygon, i, y[i]);
-    }
-    ASSERT_EQ(n, vertices_num(polygon));
+    holes_t holes = holes_create(ARR_LEN(holeIndices), holeIndices);
 
-    triangles_t triangles = polygon_earcut(polygon, ARR_LEN(holeIndices), holeIndices);
+    const int n = ARR_LEN(x);
+    vertices_t vertices = vertices_create(n, x, y);
+    ASSERT_EQ(n, vertices_num(vertices));
+
+    triangles_t triangles = polygon_earcut(vertices, holes);
     ASSERT(NULL != triangles);
     __auto_type m = triangles_num(triangles);
     int expected_triangle_num = n + ARR_LEN(holeIndices) * 2 - 2;
@@ -217,6 +191,9 @@ TEST hole1_test(void) {
     ASSERT_EQUAL_T(expected_triangles, tri, &boxed_triangle_type_info, NULL);
 //    ASSERT( diff_areas(polygon, triangles) < 0.00001);
 
+    holes_destory(holes);
+    vertices_destroy(vertices);
+    triangles_free(triangles);
     PASS();
 }
 

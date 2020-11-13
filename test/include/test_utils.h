@@ -8,6 +8,10 @@
 
 #include "greatest.h"
 
+#ifndef M_PI
+#define M_PI (3.14159265358979323846264338327950288)
+#endif
+
 #define IDX_MIN(a, b) ((a) < (b) ? (a) : (b))
 
 #define ARR_LEN(arr) (sizeof(arr)/sizeof(arr[0]))
@@ -99,8 +103,8 @@ coord_t diff_areas(polygon_t polygon, triangles_t triangles) {
         coord_t cy = vertices_nth_gety(vertices, tri[2]);
         areas += THE_ABS(triangle_area(ax,ay, bx,by, cx,cy));
     }
-    DBG("polygon.area: %g, triangles.area: %g", darea, areas);
-    __auto_type diff = darea - areas;
+    __auto_type diff = 1 - areas/darea;
+    DBG("polygon.area: %.4f - triangles.area: %.4f = %g", darea, areas, diff);
     return THE_ABS(diff);
 }
 

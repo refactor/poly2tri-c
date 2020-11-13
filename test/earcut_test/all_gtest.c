@@ -2,6 +2,7 @@
 #include "greatest.h"
 #include "test_utils.h"
 #include "polygon_earcut.h"
+#include <math.h>
 
 TEST signed_area_test(void) {
     PASS();
@@ -11,28 +12,33 @@ SUITE(unit_tests) {
     RUN_TEST(signed_area_test);
 }
 
-TEST ccw_test1(void) {
-    // a counter-clockwise polygon
-    coord_t xs[] = {70, 60, 0, 10};
-    coord_t ys[] = {10, 60, 50, 0};
-    const int n = ARR_LEN(xs);
-    vertices_t vertices = vertices_create(n, xs, ys);
+vertices_t rotate_vertices(const int n, const coord_t xs[n], const coord_t ys[n], double angle) {
+    double csita = cos(angle);
+    double ssita = sin(angle);
+
+    coord_t* seq_x = calloc(n, sizeof(seq_x[0]));
+    coord_t* seq_y = calloc(n, sizeof(seq_y[0]));
+    for (int i = 0; i < n; ++i) {
+        seq_x[i] = csita * xs[i] - ssita * ys[i];
+        seq_y[i] = ssita * xs[i] + csita * ys[i];
+    }
+    vertices_t vertices = vertices_create(n, seq_x, seq_y);
+    free(seq_x); free(seq_y);
+    return vertices;
+}
+
+TEST hole_rotate_test(const int n, const coord_t xs[n], const coord_t ys[n], double angle, vidx_t hn, vidx_t holeIndices[hn]) {
+    vertices_t vertices = rotate_vertices(n, xs, ys, angle);
     ASSERT_EQ(n, vertices_num(vertices));
 
-    triangles_t triangles = polygon_earcut(vertices, NULL);
+    holes_t holes = holes_create(hn, holeIndices);
+    polygon_t polygon = polygon_build(vertices, holes);
+    triangles_t triangles = polygon_earcut(vertices, holes);
     ASSERT(NULL != triangles);
     __auto_type m = triangles_num(triangles);
-    ASSERT_EQ(n-2, m);
+    ASSERT_EQ(n + 2*holes_num(holes) - 2, m);
 
-    boxed_triangle expected_triangles[] = {
-        {.tri = {2,3,0} },
-        {.tri = {0,1,2} },
-    };
-    vidx_t* tri = triangles_nth(triangles, 0);
-    ASSERT_EQUAL_T(&expected_triangles, tri, &boxed_triangle_type_info, NULL);
-
-    polygon_t polygon = polygon_build(vertices, NULL);
-    ASSERT( diff_areas(polygon, triangles) < 0.00001);
+    ASSERT(diff_areas(polygon, triangles) < 1e-6);
 
     polygon_destroy(polygon);
     triangles_free(triangles);
@@ -40,153 +46,119 @@ TEST ccw_test1(void) {
     PASS();
 }
 
-TEST cw_test2(void) {
-    // a clockwise ploygon
-    coord_t xs[] = {10,0,60,70};
-    coord_t ys[] = {0,50,60,10};
-    const int n = ARR_LEN(xs);
-    vertices_t vertices = vertices_create(n, xs, ys);
+TEST rotate_test(boxed_triangle* expected_triangles, const int n, const coord_t xs[n], const coord_t ys[n], double angle) {
+    vertices_t vertices = rotate_vertices(n, xs, ys, angle);
     ASSERT_EQ(n, vertices_num(vertices));
 
     triangles_t triangles = polygon_earcut(vertices, NULL);
     ASSERT(NULL != triangles);
     __auto_type m = triangles_num(triangles);
     ASSERT_EQ(n-2, m);
+
+    vidx_t* tri = triangles_nth(triangles, 0);
+    ASSERT_EQUAL_T(expected_triangles, tri, &boxed_triangle_type_info, NULL);
+
+    polygon_t polygon = polygon_build(vertices, NULL);
+    char msg[128] = {0};
+    snprintf(msg, sizeof(msg), "angle=%g", angle * 180 / M_PI);
+    DBG("rotate: %s", msg);
+    ASSERT(diff_areas(polygon, triangles) < 1e-6);
+
+    polygon_destroy(polygon);
+    triangles_free(triangles);
+
+    PASS();
+}
+
+SUITE(cw_quadrangle_tests) {
+    // a clockwise ploygon
+    coord_t xs[] = {10,0,60,70};
+    coord_t ys[] = {0,50,60,10};
+    const int n = ARR_LEN(xs);
 
     boxed_triangle expected_triangles[] = {
         {.tri = {1,0,3} },
         {.tri = {3,2,1} },
     };
-    vidx_t* tri = triangles_nth(triangles, 0);
-    ASSERT_EQUAL_T(&expected_triangles, tri, &boxed_triangle_type_info, NULL);
-
-    polygon_t polygon = polygon_build(vertices, NULL);
-    ASSERT( diff_areas(polygon, triangles) < 0.00001);
-
-    triangles_free(triangles);
-    polygon_destroy(polygon);
-
-    PASS();
+    for (int i = 1; i <=11; ++i) {
+        RUN_TESTp(rotate_test, expected_triangles, n, xs, ys, 2*M_PI/i);
+    }
 }
 
-TEST cw_test3(void) {
+SUITE(pentagon_tests) {
     // clockwise
     coord_t xs[] = {3,5,12,9,5};
     coord_t ys[] = {4,11,8,5,6};
     const int n = ARR_LEN(xs);
-    vertices_t vertices = vertices_create(n, xs, ys);
-    ASSERT_EQ(n, vertices_num(vertices));
-
-    triangles_t triangles = polygon_earcut(vertices, NULL);
-    ASSERT(NULL != triangles);
-    __auto_type m = triangles_num(triangles);
-    ASSERT_EQ(n-2, m);
     boxed_triangle expected_triangles[] = {
         {.tri = {1,0,4} },
         {.tri = {4,3,2} },
         {.tri = {2,1,4} },
     };
-    vidx_t* tri = triangles_nth(triangles, 0);
-    ASSERT_EQUAL_T(&expected_triangles, tri, &boxed_triangle_type_info, NULL);
-
-    polygon_t polygon = polygon_build(vertices, NULL);
-    ASSERT( diff_areas(polygon, triangles) < 0.00001);
-
-    triangles_free(triangles);
-    polygon_destroy(polygon);
-
-    PASS();
+    for (int i = 1; i <=9; ++i) {
+        RUN_TESTp(rotate_test, expected_triangles, n, xs, ys, 2*M_PI/i);
+    }
 }
 
-SUITE(earcut_tests) {
-    RUN_TEST(ccw_test1);
-    RUN_TEST(cw_test2);
-    RUN_TEST(cw_test3);
+SUITE(ccw_quadrangle_tests) {
+    //*
+    // a counter-clockwise quadrangle
+    coord_t xs[] = {70, 60, 0, 10};
+    coord_t ys[] = {10, 60, 50, 0};
+    const int n = ARR_LEN(xs);
+    boxed_triangle expected_triangles[] = {
+        {.tri = {2,3,0} },
+        {.tri = {0,1,2} },
+    };
+    //*/
+    for (int i = 1; i <= 7; ++i) {
+        RUN_TESTp(rotate_test, expected_triangles, n, xs, ys, 2*M_PI/i);
+    }
 }
 
-TEST i18_test(void) {
+SUITE(i18_tests) {
 #include "i18_data.h"
     const int n = ARR_LEN(x);
-    vertices_t vertices = vertices_create(n, x, y);
-    ASSERT_EQ(n, vertices_num(vertices));
-
-    triangles_t triangles = polygon_earcut(vertices, NULL);
-    ASSERT(NULL != triangles);
-    __auto_type m = triangles_num(triangles);
-    ASSERT_EQ(n-2, m);
-
-    //print_triangles(triangles);
-    vidx_t* tri = triangles_nth(triangles, 0);
-    ASSERT_EQUAL_T(expected_triangles, tri, &boxed_triangle_type_info, NULL);
-    polygon_t polygon = polygon_build(vertices, NULL);
-    ASSERT( diff_areas(polygon, triangles) < 0.00001);
-
-    triangles_free(triangles);
-    polygon_destroy(polygon);
-
-    PASS();
+    for (int i = 1; i <=13; ++i) {
+        RUN_TESTp(rotate_test, (boxed_triangle*)expected_triangles, n, x, y, 2*M_PI/i);
+    }
 }
 
-TEST comb_test(void) {
+SUITE(comb_tests) {
 #include "comb_data.h"
     const int n = ARR_LEN(x);
-    vertices_t vertices = vertices_create(n, x, y);
-    ASSERT_EQ(n, vertices_num(vertices));
-
-    triangles_t triangles = polygon_earcut(vertices, NULL);
-    ASSERT(NULL != triangles);
-    __auto_type m = triangles_num(triangles);
-    ASSERT_EQ(n-2, m);
-
-    //print_triangles(triangles);
-    vidx_t* tri = triangles_nth(triangles, 0);
-    ASSERT_EQUAL_T(expected_triangles, tri, &boxed_triangle_type_info, NULL);
-    polygon_t polygon = polygon_build(vertices, NULL);
-    ASSERT( diff_areas(polygon, triangles) < 0.00001);
-
-    triangles_free(triangles);
-    polygon_destroy(polygon);
-
-    PASS();
+    for (int i = 1; i <=19; ++i) {
+        RUN_TESTp(rotate_test, (boxed_triangle*)expected_triangles, n, x, y, 2*M_PI/i);
+    }
 }
 
-TEST hand_test(void) {
+SUITE(hand_tests) {
 #include "hand_data.h"
     const int n = ARR_LEN(x);
-    vertices_t vertices = vertices_create(n, x, y);
-    ASSERT_EQ(n, vertices_num(vertices));
-
-    triangles_t triangles = polygon_earcut(vertices, NULL);
-    ASSERT(NULL != triangles);
-    __auto_type m = triangles_num(triangles);
-    ASSERT_EQ(n-2, m);
-
-vidx_t expected_triangles[] = {
-    57, 58, 0, 0, 1, 2, 2, 3, 4, 4, 5, 6, 10, 11, 12, 12, 13, 14, 14, 15, 16, 16, 17, 18, 23, 24, 25, 25, 26, 27, 27, 28, 29, 30, 31, 32, 33, 34, 35, 35, 36, 37, 37, 38, 39, 39, 40, 41, 41, 42, 43, 45, 46, 47, 47, 48, 49, 50, 51, 52, 53, 54, 55, 55, 56, 57, 57, 0, 2, 2, 4, 6, 10, 12, 14, 14, 16, 18, 23, 25, 27, 27, 29, 30, 35, 37, 39, 39, 41, 43, 45, 47, 49, 49, 50, 52, 53, 55, 57, 2, 6, 7, 10, 14, 18, 23, 27, 30, 33, 35, 39, 44, 45, 49, 53, 57, 2, 9, 10, 18, 22, 23, 30, 33, 39, 43, 44, 49, 52, 53, 2, 7, 9, 18, 19, 22, 30, 32, 32, 33, 43, 43, 44, 52, 52, 53, 7, 9, 19, 20, 22, 32, 43, 52, 7, 8, 8, 9, 20, 22, 43, 52, 8, 20, 21, 21, 22, 52, 52, 8, 21
-};
-
-    //print_triangles(triangles);
-    vidx_t* tri = triangles_nth(triangles, 0);
-    ASSERT_EQUAL_T(expected_triangles, tri, &boxed_triangle_type_info, NULL);
-    polygon_t polygon = polygon_build(vertices, NULL);
-    ASSERT( diff_areas(polygon, triangles) < 0.00001);
-
-    triangles_free(triangles);
-    polygon_destroy(polygon);
-
-    PASS();
-}
-
-SUITE(data_tests) {
-    RUN_TEST(i18_test);
-    RUN_TEST(comb_test);
-    RUN_TEST(hand_test);
+    /*
+    boxed_triangle expected_triangles[] = {
+        {57, 58, 0}, {0, 1, 2}, {2, 3, 4}, {4, 5, 6}, {10, 11, 12}, {12, 13, 14}, {14, 15, 16}, {16, 17, 18}, {23, 24, 25}, 
+        {25, 26, 27}, {27, 28, 29}, {30, 31, 32}, {33, 34, 35}, {35, 36, 37}, {37, 38, 39}, {39, 40, 41}, {41, 42, 43},
+        {45, 46, 47}, {47, 48, 49}, {50, 51, 52}, {53, 54, 55}, {55, 56, 57}, {57, 0, 2}, {2, 4, 6}, {10, 12, 14}, {14, 16, 18},
+        {23, 25, 27}, {27, 29, 30}, {35, 37, 39}, {39, 41, 43}, {45, 47, 49}, {49, 50, 52}, {53, 55, 57}, {2, 6, 7}, {10, 14, 18},
+        {23, 27, 30}, {33, 35, 39}, {44, 45, 49}, {53, 57, 2}, {9, 10, 18}, {22, 23, 30}, {33, 39, 43}, {44, 49, 52}, {53, 2, 7},
+        {9, 18, 19}, {22, 30, 32}, {32, 33, 43}, {43, 44, 52}, {52, 53, 7}, {9, 19, 20}, {22, 32, 43}, {52, 7, 8}, {8, 9, 20},
+        {22, 43, 52}, {8, 20, 21}, {21, 22, 52}, {52, 8, 21}
+    };
+*/
+    vidx_t expected_triangles[] = {
+        57, 58, 0, 0, 1, 2, 2, 3, 4, 4, 5, 6, 10, 11, 12, 12, 13, 14, 14, 15, 16, 16, 17, 18, 23, 24, 25, 25, 26, 27, 27, 28, 29, 30, 31, 32, 33, 34, 35, 35, 36, 37, 37, 38, 39, 39, 40, 41, 41, 42, 43, 45, 46, 47, 47, 48, 49, 50, 51, 52, 53, 54, 55, 55, 56, 57, 57, 0, 2, 2, 4, 6, 10, 12, 14, 14, 16, 18, 23, 25, 27, 27, 29, 30, 35, 37, 39, 39, 41, 43, 45, 47, 49, 49, 50, 52, 53, 55, 57, 2, 6, 7, 10, 14, 18, 23, 27, 30, 33, 35, 39, 44, 45, 49, 53, 57, 2, 9, 10, 18, 22, 23, 30, 33, 39, 43, 44, 49, 52, 53, 2, 7, 9, 18, 19, 22, 30, 32, 32, 33, 43, 43, 44, 52, 52, 53, 7, 9, 19, 20, 22, 32, 43, 52, 7, 8, 8, 9, 20, 22, 43, 52, 8, 20, 21, 21, 22, 52, 52, 8, 21
+    };
+    for (int i = 1; i <=17; ++i) {
+        RUN_TESTp(rotate_test, (boxed_triangle*)expected_triangles, n, x, y, 2*M_PI/i);
+    }
 }
 
 TEST hole1_test(void) {
     // counter-clockwise
     coord_t x[] = {0, 100, 100,   0, 20, 80, 80, 20};
     coord_t y[] = {0,   0, 100, 100, 20, 20, 80, 80};
+
     vidx_t holeIndices[] = {4};
     holes_t holes = holes_create(ARR_LEN(holeIndices), holeIndices);
 
@@ -220,6 +192,18 @@ SUITE(hole_tests) {
     RUN_TEST(hole1_test);
 }
 
+SUITE(r_hole_tests) {
+    coord_t x[] = {0, 100, 100,   0, 20, 80, 80, 20};
+    coord_t y[] = {0,   0, 100, 100, 20, 20, 80, 80};
+    const int n = ARR_LEN(x);
+
+    vidx_t holeIndices[] = {4};
+
+    for (int i = 1; i <=17; ++i) {
+        RUN_TESTp(hole_rotate_test, n, x, y, 2*M_PI/i, ARR_LEN(holeIndices), holeIndices);
+    }
+}
+
 GREATEST_MAIN_DEFS();
 
 int main(int argc, char* argv[]) {
@@ -228,9 +212,17 @@ int main(int argc, char* argv[]) {
     GREATEST_MAIN_BEGIN();
 
     RUN_SUITE(unit_tests);
-    RUN_SUITE(earcut_tests);
-    RUN_SUITE(data_tests);
+
+    RUN_SUITE(cw_quadrangle_tests);
+    RUN_SUITE(ccw_quadrangle_tests);
+    RUN_SUITE(pentagon_tests);
+
+    RUN_SUITE(hand_tests);
+    RUN_SUITE(comb_tests);
+    RUN_SUITE(i18_tests);
+
     RUN_SUITE(hole_tests);
+    RUN_SUITE(r_hole_tests);
 
     GREATEST_MAIN_END();
 }

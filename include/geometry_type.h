@@ -44,7 +44,7 @@ MYIDEF vidx_t  triangles_append(triangles_t triangles, vidx_t a, vidx_t b, vidx_
 
 typedef struct vertices_s* vertices_t;
 
-MYIDEF vertices_t vertices_create(vidx_t n, coord_t x[n], coord_t y[n]);
+MYIDEF vertices_t vertices_create(vidx_t n, const coord_t x[n], const coord_t y[n]);
 MYIDEF void       vertices_destroy(vertices_t poly);
 
 MYIDEF vidx_t  vertices_num(const vertices_t poly);
@@ -55,6 +55,7 @@ MYIDEF void    vertices_nth_setxy(vertices_t cs, vidx_t idx, coord_t x, coord_t 
 
 typedef struct holes_s* holes_t;
 
+MYIDEF vidx_t holes_num(holes_t holes);
 MYIDEF holes_t holes_create(vidx_t num, vidx_t holeIndices[num]);
 MYIDEF void    holes_destory(holes_t holes);
 
@@ -174,7 +175,7 @@ vertices_t vertices_allocate(vidx_t n) {
     return cs;
 }
 
-MYIDEF vertices_t vertices_create(vidx_t n, coord_t x[n], coord_t y[n]) {
+MYIDEF vertices_t vertices_create(vidx_t n, const coord_t x[n], const coord_t y[n]) {
     vertices_t polygon = vertices_allocate(n);
     for (__auto_type i=0; i<n; ++i) {
         vertices_nth_setxy(polygon, i, x[i], y[i]);
@@ -212,6 +213,10 @@ MYIDEF holes_t holes_create(vidx_t num, vidx_t holeIndices[num]) {
 
 MYIDEF void holes_destory(holes_t holes) {
     free(holes);
+}
+
+MYIDEF vidx_t holes_num(holes_t holes) {
+    return holes->num;
 }
 
 /**

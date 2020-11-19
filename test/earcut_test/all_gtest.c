@@ -1,6 +1,7 @@
 #include "mylog.h"
 #include "greatest.h"
 #include "test_utils.h"
+#include "data_utils.h"
 #include "polygon_earcut.h"
 #include <math.h>
 
@@ -154,6 +155,98 @@ SUITE(hand_tests) {
     }
 }
 
+TEST funny_test(void) {
+#include "funny_data.h"
+    const int n = ARR_LEN(xy);
+    double angle = 0;
+    vertices_t vertices = dump_vertices(n, xy, angle);
+    ASSERT_EQ(n, vertices_num(vertices));
+
+    triangles_t triangles = polygon_earcut(vertices, NULL);
+    ASSERT(NULL != triangles);
+
+    polygon_t polygon = polygon_build(vertices, NULL);
+    ASSERT(diff_areas(polygon, triangles) < 1e-6);
+
+    polygon_destroy(polygon);
+    triangles_free(triangles);
+
+    PASS();
+}
+
+TEST kzer_test(void) {
+#include "kzer-za.h"
+    const int n = ARR_LEN(xy);
+    double angle = 0;
+    vertices_t vertices = dump_vertices(n, xy, angle);
+    ASSERT_EQ(n, vertices_num(vertices));
+
+    triangles_t triangles = polygon_earcut(vertices, NULL);
+    ASSERT(NULL != triangles);
+
+    polygon_t polygon = polygon_build(vertices, NULL);
+    ASSERT(diff_areas(polygon, triangles) < 1e-6);
+
+    polygon_destroy(polygon);
+    triangles_free(triangles);
+
+    PASS();
+}
+
+TEST nazca_monkey_test(void) {
+    vertices_t vertices = read_vertices_from("../data/nazca_monkey.dat");
+
+    triangles_t triangles = polygon_earcut(vertices, NULL);
+    ASSERT(NULL != triangles);
+
+    polygon_t polygon = polygon_build(vertices, NULL);
+    ASSERT(diff_areas(polygon, triangles) < 1e-6);
+
+    polygon_destroy(polygon);
+    triangles_free(triangles);
+
+    PASS();
+}
+TEST nazca_heron_test(void) {
+    vertices_t vertices = read_vertices_from("../data/nazca_heron.dat");
+    for (int i =0; i<vertices_num(vertices); ++i) printf("%d: %g, %g\n", i, vertices_nth_getx(vertices, i), vertices_nth_gety(vertices,i));
+
+    triangles_t triangles = polygon_earcut(vertices, NULL);
+    ASSERT(NULL != triangles);
+
+    polygon_t polygon = polygon_build(vertices, NULL);
+    ASSERT(diff_areas(polygon, triangles) < 1e-5);
+
+    polygon_destroy(polygon);
+    triangles_free(triangles);
+
+    PASS();
+}
+/*
+TEST sketchup_test(void) {
+    vertices_t vertices = read_vertices_from("../data/sketchup.dat");
+    for (int i =0; i<vertices_num(vertices); ++i) printf("%d: %g, %g\n", i, vertices_nth_getx(vertices, i), vertices_nth_gety(vertices,i));
+
+    triangles_t triangles = polygon_earcut(vertices, NULL);
+    ASSERT(NULL != triangles);
+
+    polygon_t polygon = polygon_build(vertices, NULL);
+    ASSERT(diff_areas(polygon, triangles) < 1e-5);
+
+    polygon_destroy(polygon);
+    triangles_free(triangles);
+
+    PASS();
+}
+*/
+SUITE(funny_tests) {
+    RUN_TEST(funny_test);
+    RUN_TEST(kzer_test);
+    RUN_TEST(nazca_monkey_test);
+    RUN_TEST(nazca_heron_test);
+    //RUN_TEST(sketchup_test);
+}
+
 TEST hole1_test(void) {
     // counter-clockwise
     coord_t x[] = {0, 100, 100,   0, 20, 80, 80, 20};
@@ -212,6 +305,7 @@ int main(int argc, char* argv[]) {
     GREATEST_MAIN_BEGIN();
 
     RUN_SUITE(unit_tests);
+    RUN_SUITE(funny_tests);
 
     RUN_SUITE(cw_quadrangle_tests);
     RUN_SUITE(ccw_quadrangle_tests);
@@ -225,5 +319,7 @@ int main(int argc, char* argv[]) {
     RUN_SUITE(r_hole_tests);
 
     GREATEST_MAIN_END();
+
+
 }
 

@@ -4,7 +4,6 @@
 #include <stdio.h>
 
 #include "geometry_type.h"
-#include "fmt_polygon_triangulate.h"
 
 #include "greatest.h"
 
@@ -14,7 +13,7 @@
 
 #define IDX_MIN(a, b) ((a) < (b) ? (a) : (b))
 
-#define ARR_LEN(arr) (sizeof(arr)/sizeof(arr[0]))
+#define ARR_LEN(arr) ((vidx_t)(sizeof(arr)/sizeof(arr[0])))
 
 #define TRIANGLE_EQ(et, gt) ((et[0] == gt[0]) && (et[1] == gt[1]) && (et[2] == gt[2])) \
                         || ((et[0] == gt[1]) && (et[1] == gt[2]) && (et[2] == gt[0])) \
@@ -126,3 +125,4 @@ void print_triangles(triangles_t triangles) {
     }
     printf("\n");
 }
+

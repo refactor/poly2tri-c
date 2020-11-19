@@ -92,7 +92,7 @@ node_t* linkedList(const vertices_t vertices, vidx_t start, vidx_t end, bool cou
 }
 
 // z-order of a point given coords and inverse of the longer side of data bbox
-float floatZOrder(float x0, float y0, float minX, float minY, float invSize) {
+coord_t zOrder(coord_t x0, coord_t y0, coord_t minX, coord_t minY, coord_t invSize) {
     // coords are transformed into non-negative 15-bit integer range
      int32_t x = (int32_t) (32767 * (x0 - minX) * invSize);
      int32_t y = (int32_t) (32767 * (y0 - minY) * invSize);
@@ -109,30 +109,6 @@ float floatZOrder(float x0, float y0, float minX, float minY, float invSize) {
 
      return x | (y << 1);
 }
-// z-order of a point given coords and inverse of the longer side of data bbox
-double doubleZOrder(double x0, double y0, double minX, double minY, double invSize) {
-    // coords are transformed into non-negative 31-bit integer range
-     int64_t x = (int64_t) (2147483647 * (x0 - minX) * invSize);
-     int64_t y = (int64_t) (2147483647 * (y0 - minY) * invSize);
-
-     x = (x | (x << 32)) & 0x00000000FFFFFFFF;
-     x = (x | (x << 16)) & 0x0000FFFF0000FFFF;
-     x = (x | (x << 8))  & 0x00FF00FF00FF00FF;
-     x = (x | (x << 4))  & 0x0F0F0F0F0F0F0F0F;
-     x = (x | (x << 2))  & 0x3333333333333333;
-     x = (x | (x << 1))  & 0x5555555555555555;
-
-     y = (y | (y << 32)) & 0x00000000FFFFFFFF;
-     y = (y | (y << 16)) & 0x0000FFFF0000FFFF;
-     y = (y | (y << 8))  & 0x00FF00FF00FF00FF;
-     y = (y | (y << 4))  & 0x0F0F0F0F0F0F0F0F;
-     y = (y | (y << 2))  & 0x3333333333333333;
-     y = (y | (y << 1))  & 0x5555555555555555;
-
-     return x | (y << 1);
-}
-
-#define zOrder(x0,y0,minX,minY,invSize) _Generic((x0), float:floatZOrder(x0,y0,minX,minY,invSize), double:doubleZOrder(x0,y0,minX,minY,invSize))
 
 node_t* sortLinked(node_t* list) {
     vidx_t i;

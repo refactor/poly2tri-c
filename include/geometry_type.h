@@ -20,10 +20,10 @@ typedef double coord_t;
 typedef float coord_t;
 #endif
 
-#ifdef USING_INT32_INDEX
-typedef int32_t vidx_t;
-#else
+#ifdef USING_INT16_INDEX
 typedef int16_t vidx_t;
+#else
+typedef int32_t vidx_t;
 #endif
 
 #define THE_MIN(a, b) ((a) < (b) ? (a) : (b))

@@ -655,7 +655,11 @@ MYIDEF triangles_t polygon_earcut(const vertices_t vertices, const holes_t holes
         invSize = THE_MAX(deltaX, deltaY);
         invSize = invSize != 0 ? 1 / invSize : 0;
     }
-    triangles_t triangles = triangles_allocate(vertices->n - 2);
+    vidx_t tri_num = vertices->n - 2;
+    if (hasHole) {
+        tri_num += 2 * holes->num;
+    }
+    triangles_t triangles = triangles_allocate(tri_num);
     earcutLinked(outerNode, triangles, minX, minY, invSize, 0);
     return triangles;
 }

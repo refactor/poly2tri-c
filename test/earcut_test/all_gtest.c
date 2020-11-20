@@ -245,7 +245,7 @@ TEST hole1_test(void) {
 
     triangles_t triangles = polygon_earcut(vertices, holes);
     ASSERT(NULL != triangles);
-int* ptr = malloc(8); (void)ptr;
+
     int expected_triangle_num = n + ARR_LEN(holeIndices) * 2 - 2;
     DBG("triangles.num: %d", expected_triangle_num);
     ASSERT_EQ_FMT(expected_triangle_num, triangles_num(triangles), "%d");

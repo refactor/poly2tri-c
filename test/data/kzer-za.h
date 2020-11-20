@@ -1,4 +1,4 @@
-#include "geometry_type.h"  
+
 coord_t xy[][2] = {
 {101.25, 1006.8145},
 {-0.0, 869.6563},

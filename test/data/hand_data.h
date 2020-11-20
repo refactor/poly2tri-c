@@ -1,5 +1,5 @@
-#include "geometry_type.h"
-coord_t x[] = {
+
+const coord_t x[] = {
     0.496200,
     0.557100,
     0.606100,
@@ -60,7 +60,7 @@ coord_t x[] = {
     0.336300,
     0.356200,
 };
-coord_t y[] = {
+const coord_t y[] = {
     0.208600,
     0.319900,
     0.415800,

@@ -47,7 +47,8 @@ typedef struct vertices_s* vertices_t;
 //MYIDEF vertices_t vertices_create(vidx_t n, const coord_t x[n], const coord_t y[n]);
 MYIDEF vertices_t vertices_clone_floats(vidx_t n, const float x[n], const float y[n]);
 MYIDEF vertices_t vertices_clone_doubles(vidx_t n, const double x[n], const double y[n]);
-#define vertices_create(n, x, y) _Generic((x), float*:vertices_clone_floats, double*:vertices_clone_doubles)(n,x,y)
+#define vertices_create(n, x, y) _Generic((x), const float*:vertices_clone_floats, float*:vertices_clone_floats,\
+        const double*:vertices_clone_doubles, double*:vertices_clone_doubles)(n,x,y)
 
 MYIDEF void       vertices_destroy(vertices_t poly);
 
@@ -60,9 +61,10 @@ MYIDEF void    vertices_nth_setxy(vertices_t cs, vidx_t idx, coord_t x, coord_t 
 typedef struct holes_s* holes_t;
 
 //MYIDEF holes_t holes_create(vidx_t num, vidx_t holeIndices[num]);
-MYIDEF holes_t holes_create_int16(int16_t num, int16_t holeIndices[num]);
-MYIDEF holes_t holes_create_int32(int32_t num, int32_t holeIndices[num]);
-#define holes_create(num, holeIndices) _Generic((num), int16_t:holes_create_int16, int32_t:holes_create_int32)(num, holeIndices)
+MYIDEF holes_t holes_create_int16(int16_t num, const int16_t holeIndices[num]);
+MYIDEF holes_t holes_create_int32(int32_t num, const int32_t holeIndices[num]);
+#define holes_create(num, holeIndices) _Generic((num), const int16_t:holes_create_int16, int16_t:holes_create_int16, \
+        const int32_t:holes_create_int32, int32_t:holes_create_int32)(num, holeIndices)
 
 MYIDEF void    holes_destory(holes_t holes);
 
@@ -116,15 +118,21 @@ struct polygon_s {
 };
 
 MYIDEF polygon_t polygon_build(const vertices_t vertices, const holes_t holes) {
-    polygon_t polygon = (__typeof__(polygon)) malloc(sizeof(*polygon));
+    polygon_t polygon = (polygon_t) malloc(sizeof(*polygon));
     polygon->vertices = vertices;
     polygon->holes = holes;
     return polygon;
 }
 
 MYIDEF void polygon_destroy(polygon_t polygon) {
-    if (polygon->vertices) vertices_destroy(polygon->vertices);
-    if (polygon->holes) holes_destory(polygon->holes);
+    if (polygon->vertices) {
+        vertices_destroy(polygon->vertices);
+        polygon->vertices = NULL;
+    }
+    if (polygon->holes) {
+        holes_destory(polygon->holes);
+        polygon->holes = NULL;
+    }
     free(polygon);
 }
 
@@ -179,7 +187,7 @@ MYIDEF vidx_t triangles_append(triangles_t triangles, vidx_t a, vidx_t b, vidx_t
 }
 
 vertices_t vertices_allocate(vidx_t n) {
-    vertices_t cs = (__typeof__(cs)) aligned_alloc(8, sizeof(*cs) + n * (COORD_X_SZ + COORD_Y_SZ) );
+    vertices_t cs = (vertices_t) aligned_alloc(8, sizeof(*cs) + n * (COORD_X_SZ + COORD_Y_SZ) );
     cs->N = n;
     return cs;
 }
@@ -194,7 +202,7 @@ MYIDEF vertices_t vertices_clone_doubles(vidx_t n, const double x[n], const doub
 
 MYIDEF vertices_t vertices_clone_floats(vidx_t n, const float x[n], const float y[n]) {
     vertices_t polygon = vertices_allocate(n);
-    for (__auto_type i=0; i<n; ++i) {
+    for (vidx_t i=0; i<n; ++i) {
         vertices_nth_setxy(polygon, i, (coord_t)x[i], (coord_t)y[i]);
     }
     return polygon;
@@ -221,14 +229,14 @@ MYIDEF coord_t vertices_nth_gety(const vertices_t cs, vidx_t idx) {
     return cs->vertices[cs->n  + idx];
 }
 
-MYIDEF holes_t holes_create_int16(int16_t num, int16_t holeIndices[num]) {
+MYIDEF holes_t holes_create_int16(int16_t num, const int16_t holeIndices[num]) {
 //MYIDEF holes_t holes_create(vidx_t num, vidx_t holeIndices[num]) {
     holes_t holes = (__typeof__(holes)) aligned_alloc(8, sizeof(*holes) + num * sizeof(holes->holeIndices[0]));
     holes->num = num;
     for (vidx_t i = 0; i < num; ++i) holes->holeIndices[i] = holeIndices[i];
     return holes;
 }
-MYIDEF holes_t holes_create_int32(int32_t num, int32_t holeIndices[num]) {
+MYIDEF holes_t holes_create_int32(int32_t num, const int32_t holeIndices[num]) {
     holes_t holes = (__typeof__(holes)) aligned_alloc(8, sizeof(*holes) + num * sizeof(holes->holeIndices[0]));
     holes->num = num;
     for (vidx_t i = 0; i < num; ++i) holes->holeIndices[i] = holeIndices[i];

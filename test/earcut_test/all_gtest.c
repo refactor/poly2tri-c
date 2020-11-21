@@ -44,7 +44,6 @@ TEST hole_rotate_test(const int n, const coord_t xs[n], const coord_t ys[n], dou
 TEST rotate_test(const boxed_triangle* expected_triangles, const int n, const coord_t xs[n], const coord_t ys[n], double angle) {
     const vertices_t vertices = rotate_vertices(n, xs, ys, angle);
     ASSERT_EQ(n, vertices_num(vertices));
-    DBG("vnum: %d", n);
 
     const triangles_t triangles = polygon_earcut(vertices, NULL);
     ASSERT(NULL != triangles);
@@ -237,7 +236,6 @@ TEST hole1_test(void) {
     const vidx_t holeIndices[] = {4};
     vidx_t holeNum = ARR_LEN(holeIndices);
     holes_t holes = holes_create(holeNum, holeIndices);
-    DBG("holeNum: %d", holeNum);
 
     const vidx_t n = ARR_LEN(x);
     const vertices_t vertices = vertices_create(n, x, y);
@@ -247,7 +245,6 @@ TEST hole1_test(void) {
     ASSERT(NULL != triangles);
 
     int expected_triangle_num = n + ARR_LEN(holeIndices) * 2 - 2;
-    DBG("triangles.num: %d", expected_triangle_num);
     ASSERT_EQ_FMT(expected_triangle_num, triangles_num(triangles), "%d");
 
     const vidx_t expected_triangles[] = {

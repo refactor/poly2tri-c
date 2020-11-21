@@ -39,6 +39,21 @@ btest:
 etest:
 	@cd test/earcut_test && $(MAKE) test
 
+e_i16f32_test: override CFLAGS += -DUSING_INT16_INDEX
+e_i16f32_test: clean
+	@cd test/earcut_test && $(MAKE) test
+
+e_i32f32_test: clean
+	@cd test/earcut_test && $(MAKE) test
+
+e_i32f64_test: override CFLAGS += -DUSING_DOUBLE_COORD
+e_i32f64_test: clean
+	@cd test/earcut_test && $(MAKE) test
+
+e_i16f64_test: override CFLAGS += -DUSING_DOUBLE_COORD -DUSING_INT16_INDEX
+e_i16f64_test: clean
+	@cd test/earcut_test && $(MAKE) test
+
 clean:
 	-@rm -f *.o src/*.o *.run *.d a.out 2> /dev/null ||true
 	@$(MAKE) -C test/jburkardt_test clean

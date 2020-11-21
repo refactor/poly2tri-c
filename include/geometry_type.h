@@ -49,6 +49,7 @@ MYIDEF vertices_t vertices_clone_floats(vidx_t n, const float x[n], const float 
 MYIDEF vertices_t vertices_clone_doubles(vidx_t n, const double x[n], const double y[n]);
 #define vertices_create(n, x, y) _Generic((x), const float*:vertices_clone_floats, float*:vertices_clone_floats,\
         const double*:vertices_clone_doubles, double*:vertices_clone_doubles)(n,x,y)
+MYIDEF vertices_t vertices_attach(vidx_t n, const coord_t px[n], const coord_t py[n]);
 
 MYIDEF void       vertices_destroy(vertices_t poly);
 
@@ -99,7 +100,11 @@ struct vertices_s {
         const vidx_t n;
         vidx_t N;
     };
-    alignas(8) coord_t vertices[];
+    struct {
+        const coord_t *px;
+        const coord_t *py;
+    };
+    alignas(8) coord_t vertices[0];
 };
 
 struct holes_s {
@@ -186,9 +191,19 @@ MYIDEF vidx_t triangles_append(triangles_t triangles, vidx_t a, vidx_t b, vidx_t
     return triangles->m;
 }
 
+MYIDEF vertices_t vertices_attach(vidx_t n, const coord_t px[n], const coord_t py[n]) {
+    vertices_t cs = (vertices_t) aligned_alloc(8, sizeof(*cs));
+    cs->N = n;
+    cs->px = px;
+    cs->py = py;
+    return cs;
+}
+
 vertices_t vertices_allocate(vidx_t n) {
     vertices_t cs = (vertices_t) aligned_alloc(8, sizeof(*cs) + n * (COORD_X_SZ + COORD_Y_SZ) );
     cs->N = n;
+    cs->px = cs->vertices;
+    cs->py = cs->vertices + n;
     return cs;
 }
 
@@ -217,16 +232,16 @@ MYIDEF vidx_t vertices_num(const vertices_t poly) {
 }
 
 MYIDEF coord_t vertices_nth_getx(const vertices_t cs, vidx_t idx) {
-    return cs->vertices[idx];
+    return cs->px[idx];
+}
+
+MYIDEF coord_t vertices_nth_gety(const vertices_t cs, vidx_t idx) {
+    return cs->py[idx];
 }
 
 MYIDEF void vertices_nth_setxy(vertices_t cs, vidx_t idx, coord_t x, coord_t y) {
     cs->vertices[idx] = x;
     cs->vertices[cs->n + idx] = y;
-}
-
-MYIDEF coord_t vertices_nth_gety(const vertices_t cs, vidx_t idx) {
-    return cs->vertices[cs->n  + idx];
 }
 
 MYIDEF holes_t holes_create_int16(int16_t num, const int16_t holeIndices[num]) {

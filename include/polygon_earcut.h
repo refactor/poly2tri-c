@@ -500,8 +500,10 @@ void earcutLinked(node_t* ear, triangles_t triangles, coord_t minX, coord_t minY
     }
     
     //if (ear && ear->prev == ear->next && ear->prev != NULL) {
-        free(ear->next);
+    if (ear->next == ear->prev) {
+        free(ear->next); 
         free(ear);
+    }
     //}
 }
 
@@ -516,10 +518,9 @@ node_t* getLeftmost(node_t* start) {
 
     return leftmost;
 }
-
 int compareX(const void* a, const void* b) {
-    const node_t* an = (const node_t*)a;
-    const node_t* bn = (const node_t*)b;
+    const node_t* an = *(const node_t**)a;
+    const node_t* bn = *(const node_t**)b;
     if (an->x < bn->x) return -1;
     if (an->x > bn->x) return 1;
     // TODO: Cannot use floatToRawIntBits because of possibility of NaNs. Float.compare(...)

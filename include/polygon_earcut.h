@@ -532,7 +532,7 @@ bool sectorContainsSector(node_t* m, node_t* p) {
 }
 
 // David Eberly's algorithm for finding a bridge between hole and outer polygon
-node_t* findHoleBridge(node_t* hole, node_t* outerNode) {
+node_t* findHoleBridge(node_t* hole, node_t* const outerNode) {
     node_t* p = outerNode;
     coord_t hx = hole->x,
             hy = hole->y,
@@ -547,7 +547,7 @@ node_t* findHoleBridge(node_t* hole, node_t* outerNode) {
             if (x <= hx && x > qx) {
                 qx = x;
                 if (x == hx) {
-                    if (hx == p->y) return p;
+                    if (hy == p->y) return p;
                     if (hy == p->next->y) return p->next;
                 }
                 m = p->x < p->next->x ? p : p->next;
@@ -572,9 +572,9 @@ node_t* findHoleBridge(node_t* hole, node_t* outerNode) {
     p = m;
     do {
         if (hx >= p->x && p->x >= mx && hx != p->x &&
-                pointInTriangle(hy < my ? hx : qx, hy, mx, my, hy < my ? qx : hy, hy, p->x, p->y)) {
-            __auto_type tmp = hy - p->y;
-            tan = THE_ABS(tmp) / (hx - p->x);  // tangential
+                pointInTriangle(hy < my ? hx : qx, hy, mx, my, hy < my ? qx : hx, hy, p->x, p->y)) {
+
+            tan = THE_ABS(hy - p->y) / (hx - p->x);  // tangential
 
             if (locallyInside(p, hole) &&
                     (tan < tanMin || (tan == tanMin && (p->x > m->x || (p->x == m->x && sectorContainsSector(m, p)))))) {

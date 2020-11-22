@@ -13,6 +13,7 @@
 #include <inttypes.h>
 #include <stdalign.h>
 #include <stdlib.h>
+#include <string.h>
 
 #ifdef USING_DOUBLE_COORD
 typedef double coord_t;
@@ -166,6 +167,7 @@ MYIDEF triangles_t triangles_allocate(vidx_t m) {
     triangles_t triangles =
         (__typeof__(triangles)) aligned_alloc(8, sizeof(*triangles) + m * 3 * sizeof(vidx_t));
     triangles->m = 0;
+    memset(triangles->vidx, -1, m * 3 * sizeof(vidx_t));
     return triangles;
 }
 

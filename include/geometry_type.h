@@ -45,7 +45,7 @@ MYIDEF vidx_t  triangles_append(triangles_t triangles, vidx_t a, vidx_t b, vidx_
 
 typedef struct vertices_s* vertices_t;
 
-//MYIDEF vertices_t vertices_create(vidx_t n, const coord_t x[n], const coord_t y[n]);
+MYIDEF vertices_t vertices_allocate(vidx_t n);
 MYIDEF vertices_t vertices_clone_floats(vidx_t n, const float x[n], const float y[n]);
 MYIDEF vertices_t vertices_clone_doubles(vidx_t n, const double x[n], const double y[n]);
 #define vertices_create(n, x, y) _Generic((x), const float*:vertices_clone_floats, float*:vertices_clone_floats,\
@@ -201,7 +201,7 @@ MYIDEF vertices_t vertices_attach(vidx_t n, const coord_t px[n], const coord_t p
     return cs;
 }
 
-vertices_t vertices_allocate(vidx_t n) {
+MYIDEF vertices_t vertices_allocate(vidx_t n) {
     vertices_t cs = (vertices_t) aligned_alloc(8, sizeof(*cs) + n * (COORD_X_SZ + COORD_Y_SZ) );
     cs->N = n;
     cs->px = cs->vertices;

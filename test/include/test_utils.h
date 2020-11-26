@@ -1,8 +1,10 @@
-#pragma once
+#ifndef TEST_UTILS_H
+#define TEST_UTILS_H
 
 #include <stdlib.h>
 #include <stdio.h>
 
+#include "mylog.h"
 #include "geometry_type.h"
 
 #include "greatest.h"
@@ -10,6 +12,8 @@
 #ifndef M_PI
 #define M_PI (3.14159265358979323846264338327950288)
 #endif
+
+#define EPISILON 0.000001
 
 #define IDX_MIN(a, b) ((a) < (b) ? (a) : (b))
 
@@ -23,6 +27,21 @@ typedef struct {
     vidx_t tri[3];
 } boxed_triangle;
 
+vidx_t boxed_triangle_min(const boxed_triangle* btri);
+vidx_t boxed_triangle_baseidx(const boxed_triangle* btri);
+int boxed_triangle_eq(const void *exp, const void *got, void *udata);
+int boxed_triangle_pt(const void *got, void *udata);
+int triangle_cmp(const void *d1, const void *d2);
+void print_triangles(triangles_t triangles);
+void print_polygon(vertices_t poly);
+coord_t diff_areas(polygon_t polygon, triangles_t triangles);
+void reverse_polygon(vertices_t poly);
+void sort_triangles(int num, boxed_triangle triangles[num]);
+
+extern greatest_type_info boxed_triangle_type_info;
+#endif // TEST_UTILS_H
+
+#ifdef TEST_UTILS_IMPLEMENTATION
 
 vidx_t boxed_triangle_min(const boxed_triangle* btri) {
     return IDX_MIN(IDX_MIN(btri->tri[0], btri->tri[1]), btri->tri[2]);
@@ -89,11 +108,11 @@ void reverse_polygon(vertices_t poly) {
 
 coord_t diff_areas(polygon_t polygon, triangles_t triangles) {
     __auto_type darea = polygon_area(polygon);
-    __typeof__(darea) areas = 0;
+    double areas = 0;
     __auto_type m = triangles_num(triangles);
+    vertices_t vertices = polygon_getvertices(polygon);
     for (__auto_type i = 0; i < m; ++i) {
         vidx_t* tri = triangles_nth(triangles, i);
-        vertices_t vertices = polygon_getvertices(polygon);
         coord_t ax = vertices_nth_getx(vertices, tri[0]);
         coord_t ay = vertices_nth_gety(vertices, tri[0]);
         coord_t bx = vertices_nth_getx(vertices, tri[1]);
@@ -103,7 +122,7 @@ coord_t diff_areas(polygon_t polygon, triangles_t triangles) {
         areas += THE_ABS(triangle_area(ax,ay, bx,by, cx,cy));
     }
     __auto_type diff = 1 - areas/darea;
-    DBG("polygon.area: %.4f - triangles.area: %.4f = %g", darea, areas, diff);
+    DBG("polygon[#%d].area: %.4f - triangles[#%d].area: %.4f = %g", vertices_num(vertices), darea, m, areas, diff);
     return THE_ABS(diff);
 }
 
@@ -126,3 +145,4 @@ void print_triangles(triangles_t triangles) {
     printf("\n");
 }
 
+#endif // TEST_UTILS_IMPLEMENTATION

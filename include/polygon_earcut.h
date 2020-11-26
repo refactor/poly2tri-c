@@ -499,12 +499,11 @@ void earcutLinked(node_t* ear, triangles_t triangles, coord_t minX, coord_t minY
         }
     }
     
-    //if (ear && ear->prev == ear->next && ear->prev != NULL) {
-    if (ear->next == ear->prev) {
+    if (ear && ear->prev == ear->next && ear->prev != NULL) {
+    //if (ear->next == ear->prev) {
         free(ear->next); 
         free(ear);
     }
-    //}
 }
 
 // find the leftmost node of a polygon ring
